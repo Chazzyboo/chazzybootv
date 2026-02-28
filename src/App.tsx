@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { io } from 'socket.io-client';
 import { wordpressService, WPPost } from './services/wordpressService';
-import { 
-  Radio, 
-  Eye, 
-  Shirt, 
-  Ticket, 
-  Activity, 
-  Volume2, 
-  Maximize2, 
-  Play, 
+import {
+  Radio,
+  Eye,
+  Shirt,
+  Ticket,
+  Activity,
+  Volume2,
+  Maximize2,
+  Play,
   Pause,
   ChevronRight,
   ChevronLeft,
@@ -57,7 +57,7 @@ const CustomCursor = () => {
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       setPosition({ x: e.clientX, y: e.clientY });
-      
+
       const target = e.target as HTMLElement;
       setIsPointer(window.getComputedStyle(target).cursor === 'pointer');
 
@@ -73,26 +73,26 @@ const CustomCursor = () => {
 
   return (
     <>
-      <div 
-        className="custom-cursor" 
-        style={{ 
-          left: position.x, 
+      <div
+        className="custom-cursor"
+        style={{
+          left: position.x,
           top: position.y,
           width: isPointer ? '40px' : '24px',
           height: isPointer ? '40px' : '24px',
           borderColor: isPointer ? '#FF0000' : '#00FF41'
-        }} 
+        }}
       />
       {trail.map((t, i) => (
-        <div 
-          key={t.id} 
-          className="cursor-trail" 
-          style={{ 
-            left: t.x, 
-            top: t.y, 
+        <div
+          key={t.id}
+          className="cursor-trail"
+          style={{
+            left: t.x,
+            top: t.y,
             opacity: (i / trail.length) * 0.5,
             transform: `scale(${i / trail.length})`
-          }} 
+          }}
         />
       ))}
     </>
@@ -106,7 +106,7 @@ const SignalHUD = () => {
   useEffect(() => {
     const handleMove = () => setLastMove(Date.now());
     window.addEventListener('mousemove', handleMove);
-    
+
     const interval = setInterval(() => {
       const idleTime = Date.now() - lastMove;
       if (idleTime > 2000) {
@@ -129,8 +129,8 @@ const SignalHUD = () => {
         <div className="text-[10px] font-mono text-white/40">{Math.round(strength)}%</div>
       </div>
       <div className="w-32 h-1 bg-white/5 border border-white/10 overflow-hidden">
-        <motion.div 
-          animate={{ 
+        <motion.div
+          animate={{
             width: `${strength}%`,
             backgroundColor: strength < 60 ? '#FF0000' : '#00FF41'
           }}
@@ -174,37 +174,36 @@ const CRTOverlay = () => (
 const OnAirSign = ({ active }: { active: boolean }) => (
   <div className="fixed top-2 right-2 md:top-6 md:right-6 z-50 flex flex-col items-end gap-1 md:gap-4">
     <div className="flex items-center gap-2">
-      <motion.div 
-        animate={{ 
+      <motion.div
+        animate={{
           opacity: active ? [1, 0.4, 1] : 0.2,
           scale: active ? [1, 1.05, 1] : 1
         }}
         transition={{ repeat: Infinity, duration: 1.5 }}
-        className={`px-1.5 py-0.5 md:px-3 md:py-1 border-2 font-bold text-[8px] md:text-xs tracking-widest ${
-          active ? 'border-broadcast-red text-broadcast-red bg-broadcast-red/10' : 'border-white/20 text-white/20'
-        }`}
+        className={`px-1.5 py-0.5 md:px-3 md:py-1 border-2 font-bold text-[8px] md:text-xs tracking-widest ${active ? 'border-broadcast-red text-broadcast-red bg-broadcast-red/10' : 'border-white/20 text-white/20'
+          }`}
       >
         ON AIR
       </motion.div>
     </div>
 
     {active && (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col gap-1 md:gap-2 items-end"
       >
-        <a 
-          href="https://instagram.com/chazzy.boo" 
-          target="_blank" 
+        <a
+          href="https://instagram.com/chazzy.boo"
+          target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1.5 px-1.5 py-1 md:px-3 md:py-2 bg-white/5 border border-white/10 hover:bg-signal-green hover:text-onyx transition-all text-[8px] md:text-[10px] font-bold tracking-widest"
         >
           <Instagram size={10} className="md:w-3.5 md:h-3.5" />
           @CHAZZY.BOO
         </a>
-        <a 
-          href="mailto:chazzyboo.inquiries@gmail.com" 
+        <a
+          href="mailto:chazzyboo.inquiries@gmail.com"
           className="flex items-center gap-1.5 px-1.5 py-1 md:px-3 md:py-2 bg-white/5 border border-white/10 hover:bg-signal-green hover:text-onyx transition-all text-[8px] md:text-[10px] font-bold tracking-widest"
         >
           <Mail size={10} className="md:w-3.5 md:h-3.5" />
@@ -250,14 +249,14 @@ const StartScreen = ({ onStart }: { onStart: () => void }) => {
       {/* Abstract Artistic Elements */}
       <div className="absolute top-10 left-10 w-32 h-32 border border-white/10 rounded-full animate-pulse pointer-events-none" />
       <div className="absolute bottom-10 right-10 w-64 h-64 border-r border-b border-white/5 pointer-events-none" />
-      
-      <motion.div 
+
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="relative z-10 w-full max-w-4xl"
       >
         <div className="mb-12">
-          <motion.div 
+          <motion.div
             initial={{ letterSpacing: '0.1em' }}
             animate={{ letterSpacing: '0.8em' }}
             transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse' }}
@@ -265,17 +264,17 @@ const StartScreen = ({ onStart }: { onStart: () => void }) => {
           >
             Establishing Connection
           </motion.div>
-          
+
           <h1 className="text-[10vw] md:text-[8vw] font-black tracking-tighter italic leading-none chromatic-aberration mb-4">
-            CHAZZY BOO<br/>
+            CHAZZY BOO<br />
             <span className="text-white">TV</span>
           </h1>
         </div>
-        
+
         <div className="flex flex-col items-center gap-8">
           {/* Progress Bar */}
           <div className="w-64 h-1 bg-white/10 relative overflow-hidden">
-            <motion.div 
+            <motion.div
               className="absolute top-0 left-0 h-full bg-signal-green"
               initial={{ width: '0%' }}
               animate={{ width: `${progress}%` }}
@@ -283,7 +282,7 @@ const StartScreen = ({ onStart }: { onStart: () => void }) => {
           </div>
 
           <div className="flex flex-col items-center gap-4">
-            <motion.button 
+            <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleStart}
@@ -295,7 +294,7 @@ const StartScreen = ({ onStart }: { onStart: () => void }) => {
                 {progress < 100 ? 'SYNCING...' : 'TUNE IN'}
               </div>
             </motion.button>
-            
+
             <div className="text-[9px] text-white/40 font-mono tracking-widest uppercase flex gap-4">
               <span>Signal: {Math.round(progress)}%</span>
               <span className="text-white/10">|</span>
@@ -304,7 +303,7 @@ const StartScreen = ({ onStart }: { onStart: () => void }) => {
           </div>
         </div>
       </motion.div>
-      
+
       {/* Vertical Rail Text */}
       <div className="absolute left-6 top-1/2 -translate-y-1/2 hidden md:block">
         <div className="writing-mode-vertical text-[8px] text-white/20 tracking-[1em] uppercase">
@@ -344,10 +343,10 @@ const GlitchIntro = ({ onComplete }: { onComplete: () => void }) => {
           <div key={i} className="flex-1 h-full" style={{ backgroundColor: color }} />
         ))}
       </div>
-      
+
       {/* Static Glitch Overlay */}
-      <motion.div 
-        animate={{ 
+      <motion.div
+        animate={{
           x: [-10, 10, -5, 5, 0],
           opacity: [0.8, 0.4, 0.9, 0.5, 0.8]
         }}
@@ -383,17 +382,16 @@ const RemoteControl = ({ currentChannel, setChannel }: { currentChannel: Channel
             <Power size={14} className="text-broadcast-red" />
           </div>
         </div>
-        
+
         <div className="flex flex-row md:flex-col gap-0.5 md:gap-2 flex-1 w-full">
           {channels.map((ch) => (
             <button
               key={ch.id}
               onClick={() => setChannel(ch.id)}
-              className={`flex-1 md:flex-none group relative flex items-center justify-center h-8 md:w-12 md:h-12 rounded-md md:rounded-xl transition-all duration-300 ${
-                currentChannel === ch.id 
-                  ? 'bg-signal-green text-onyx shadow-[0_0_15px_rgba(0,255,65,0.5)]' 
-                  : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'
-              }`}
+              className={`flex-1 md:flex-none group relative flex items-center justify-center h-8 md:w-12 md:h-12 rounded-md md:rounded-xl transition-all duration-300 ${currentChannel === ch.id
+                ? 'bg-signal-green text-onyx shadow-[0_0_15px_rgba(0,255,65,0.5)]'
+                : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'
+                }`}
             >
               <ch.icon size={12} className="md:w-5 md:h-5" />
               <div className="hidden md:block absolute left-16 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
@@ -421,19 +419,19 @@ const RemoteControl = ({ currentChannel, setChannel }: { currentChannel: Channel
 
 const ChannelSound = () => {
   const [isPlaying, setIsPlaying] = useState(false);
-  
+
   return (
     <div className="h-full flex flex-col items-center justify-center p-4 md:p-20 overflow-y-auto">
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center py-16 md:py-0">
         <div className="relative aspect-square bg-white/5 border border-white/10 overflow-hidden group max-w-[280px] md:max-w-sm mx-auto w-full">
-          <img 
-            src={PROFILE_PHOTO} 
-            alt="Chazzy Boo Profile" 
+          <img
+            src={PROFILE_PHOTO}
+            alt="Chazzy Boo Profile"
             className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity"
             referrerPolicy="no-referrer"
           />
           <div className="absolute inset-0 flex items-center justify-center">
-            <motion.button 
+            <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => setIsPlaying(!isPlaying)}
@@ -442,7 +440,7 @@ const ChannelSound = () => {
               {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} className="ml-1" fill="currentColor" />}
             </motion.button>
           </div>
-          
+
           {/* Equalizer Overlay */}
           <div className="absolute bottom-0 left-0 right-0 h-16 md:h-24 flex items-end gap-0.5 md:gap-1 px-2 md:px-4 pb-2 md:pb-4 overflow-hidden pointer-events-none">
             {Array.from({ length: 30 }).map((_, i) => (
@@ -465,21 +463,16 @@ const ChannelSound = () => {
             </p>
           </div>
 
-          <div className="space-y-3 md:space-y-4">
-            <div className="flex items-center justify-between p-3 md:p-4 border border-white/10 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group">
-              <div className="flex items-center gap-3 md:gap-4">
-                <span className="text-[10px] md:text-xs text-signal-green">01</span>
-                <span className="font-bold text-sm md:text-base">SATELLITE DREAM</span>
-              </div>
-              <Volume2 size={14} className="text-white/20 group-hover:text-signal-green" />
-            </div>
-            <div className="flex items-center justify-between p-3 md:p-4 border border-white/10 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group">
-              <div className="flex items-center gap-3 md:gap-4">
-                <span className="text-[10px] md:text-xs text-signal-green">02</span>
-                <span className="font-bold text-sm md:text-base">NOIR SIGNAL</span>
-              </div>
-              <Volume2 size={14} className="text-white/20 group-hover:text-signal-green" />
-            </div>
+          <div className="w-full h-[352px] rounded-xl overflow-hidden shadow-2xl">
+            <iframe
+              src="https://open.spotify.com/embed/artist/0bFrhCc82qmydNx8NCRY9e?utm_source=generator&theme=0"
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              allowFullScreen
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"
+              className="bg-black mix-blend-screen"
+            ></iframe>
           </div>
         </div>
       </div>
@@ -489,153 +482,48 @@ const ChannelSound = () => {
 
 const ChannelVision = () => {
   const [selectedFeed, setSelectedFeed] = useState<any>(null);
-  const feeds = [
-    { id: 1, src: PROFILE_PHOTO, label: 'MAIN PROFILE NODE', iso: 400, shutter: '1/125', lens: '35mm f/1.4' },
-    { id: 2, src: 'https://picsum.photos/seed/chazzy2/800/600', label: 'PRIMARY FEED 02', iso: 800, shutter: '1/60', lens: '50mm f/1.8' },
-    { id: 3, src: 'https://picsum.photos/seed/chazzy3/800/600', label: 'CREATIVE WORK 01', iso: 100, shutter: '1/1000', lens: '85mm f/1.2' },
-    { id: 4, src: 'https://picsum.photos/seed/chazzy4/800/600', label: 'CREATIVE WORK 02', iso: 1600, shutter: '1/30', lens: '24mm f/2.8' },
-    { id: 5, src: 'https://picsum.photos/seed/chazzy5/800/600', label: 'SIGNAL ARCHIVE 01', iso: 200, shutter: '1/250', lens: '35mm f/1.4' },
-    { id: 6, src: 'https://picsum.photos/seed/chazzy6/800/600', label: 'SIGNAL ARCHIVE 02', iso: 400, shutter: '1/500', lens: '50mm f/1.8' },
-    { id: 7, src: 'https://picsum.photos/seed/chazzy7/800/600', label: 'MIDNIGHT TRANSMISSION', iso: 3200, shutter: '1/15', lens: '35mm f/1.4' },
-    { id: 8, src: 'https://picsum.photos/seed/chazzy8/800/600', label: 'URBAN TEXTURE 01', iso: 400, shutter: '1/200', lens: '50mm f/1.2' },
-    { id: 9, src: 'https://picsum.photos/seed/chazzy9/800/600', label: 'ATMOSPHERIC NODE', iso: 100, shutter: '1/4000', lens: '24mm f/1.4' },
-    { id: 10, src: 'https://picsum.photos/seed/chazzy10/800/600', label: 'INDUSTRIAL FORM', iso: 800, shutter: '1/125', lens: '85mm f/1.8' },
-    { id: 11, src: 'https://picsum.photos/seed/chazzy11/800/600', label: 'SIGNAL BREACH 03', iso: 1600, shutter: '1/60', lens: '35mm f/1.4' },
-    { id: 12, src: 'https://picsum.photos/seed/chazzy12/800/600', label: 'NOIR ARCHIVE 04', iso: 200, shutter: '1/500', lens: '50mm f/1.2' },
-  ];
+  const [feeds, setFeeds] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchPortfolio = async () => {
+      try {
+        const res = await fetch('/api/portfolio-feed');
+        const data = await res.json();
+        setFeeds(data);
+      } catch (e) {
+        console.error("Failed to fetch portfolio feed", e);
+      }
+    };
+    fetchPortfolio();
+  }, []);
 
   return (
-    <div className="h-full p-4 md:p-24 overflow-y-auto bg-[#1a1a1a]">
-      <div className="mb-8 md:mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4 pt-16 md:pt-0 border-b border-white/20 pb-8">
-        <div>
-          <div className="text-electric-blue text-[10px] md:text-xs tracking-[0.3em] mb-2 uppercase">Surveillance Feed</div>
-          <h2 className="text-2xl md:text-5xl font-bold tracking-tighter italic">VISUAL ARCHIVE</h2>
+    <div className="h-full p-4 md:p-24 overflow-y-auto bg-[#1a1a1a] flex flex-col items-center justify-center relative">
+      <div className="absolute inset-0 noise-bg opacity-20 pointer-events-none" />
+
+      <div className="text-center z-10 space-y-6">
+        <div className="text-signal-green text-xs tracking-[0.5em] mb-4 uppercase animate-pulse">
+          Node Offline // Awaiting Transmission
         </div>
-        <div className="text-left md:text-right text-[8px] md:text-[10px] text-white/40 font-mono">
-          CONTACT SHEET // 092-CBTV<br />
-          LOC: UNDISCLOSED STUDIO
+
+        <h2 className="text-5xl md:text-8xl font-black tracking-tighter italic chromatic-aberration text-white opacity-80">
+          COMING SOON
+        </h2>
+
+        <div className="w-full h-[1px] bg-white/10 my-8 relative overflow-hidden">
+          <div className="absolute top-0 left-0 h-full w-1/4 bg-signal-green/50 animate-[scanLines_2s_linear_infinite]" />
         </div>
+
+        <p className="text-white/40 font-mono text-xs max-w-md mx-auto leading-relaxed">
+          The visual archive is currently undergoing decryption.
+          New portfolio signals will broadcast on this channel shortly.
+          Stand by.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 pb-32 md:pb-0 max-w-sm md:max-w-none mx-auto">
-        {feeds.map((feed, i) => (
-          <motion.div 
-            key={feed.id}
-            whileHover={{ scale: 1.02 }}
-            onClick={() => setSelectedFeed(feed)}
-            className="relative group bg-black p-4 shadow-2xl border-b-[20px] border-black cursor-pointer"
-          >
-            {/* Frame Number */}
-            <div className="absolute -top-6 left-0 text-[10px] font-mono text-white/20">
-              FRAME {String(i + 1).padStart(2, '0')}
-            </div>
-            
-            <div className="relative aspect-[4/5] overflow-hidden bg-onyx">
-              <img 
-                src={feed.src} 
-                alt={feed.label} 
-                className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-700 grayscale group-hover:grayscale-0 scale-110 group-hover:scale-100"
-                referrerPolicy="no-referrer"
-              />
-              
-              {/* Film Grain Overlay */}
-              <div className="absolute inset-0 pointer-events-none noise-bg opacity-10 group-hover:opacity-20 transition-opacity" />
-              
-              {/* Metadata HUD */}
-              <div className="absolute inset-0 flex flex-col justify-end p-6 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0 bg-gradient-to-t from-black/80 to-transparent">
-                <div className="text-[10px] text-signal-green font-mono mb-1 uppercase tracking-widest">{feed.label}</div>
-                <div className="flex gap-4 text-[9px] text-white/60 font-mono">
-                  <span>ISO {feed.iso}</span>
-                  <span>{feed.shutter}</span>
-                  <span>{feed.lens}</span>
-                </div>
-              </div>
-            </div>
-            
-            {/* Sprockets */}
-            <div className="absolute -bottom-4 left-0 right-0 flex justify-around px-4">
-              {Array.from({ length: 4 }).map((_, j) => (
-                <div key={j} className="w-4 h-2 bg-white/5 rounded-sm" />
-              ))}
-            </div>
-          </motion.div>
-        ))}
+      <div className="absolute bottom-8 left-8 text-[10px] text-white/20 font-mono">
+        SYS.ERR: PORTFOLIO_FEED_REDIRECT
       </div>
-
-      {/* Analysis Mode Overlay */}
-      <AnimatePresence>
-        {selectedFeed && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[300] bg-black/95 flex items-center justify-center p-4 md:p-12"
-          >
-            <div className="absolute top-8 right-8 z-10">
-              <button 
-                onClick={() => setSelectedFeed(null)}
-                className="text-white/40 hover:text-signal-green transition-colors flex items-center gap-2 text-xs font-bold tracking-widest"
-              >
-                CLOSE_ANALYSIS <ChevronRight size={16} />
-              </button>
-            </div>
-
-            <div className="relative w-full max-w-5xl aspect-[4/5] md:aspect-video bg-black border border-white/10 overflow-hidden flex flex-col md:flex-row">
-              <div className="relative flex-1 bg-onyx overflow-hidden">
-                <img 
-                  src={selectedFeed.src} 
-                  className="w-full h-full object-cover opacity-80"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="scan-line-analysis" />
-                <div className="absolute inset-0 pointer-events-none border-[20px] border-black/20" />
-                
-                {/* HUD Elements */}
-                <div className="absolute top-4 left-4 text-[10px] font-mono text-signal-green bg-black/60 px-2 py-1">
-                  ANALYSIS_ACTIVE // {selectedFeed.label}
-                </div>
-                <div className="absolute bottom-4 right-4 text-[10px] font-mono text-white/40 bg-black/60 px-2 py-1">
-                  COORD: 53.5461° N, 113.4938° W
-                </div>
-              </div>
-
-              <div className="w-full md:w-80 bg-black border-l border-white/10 p-6 flex flex-col gap-6">
-                <div>
-                  <div className="text-[10px] text-signal-green font-bold tracking-widest uppercase mb-4">Technical Data</div>
-                  <div className="space-y-4">
-                    {[
-                      { label: 'ISO_SENSITIVITY', value: selectedFeed.iso },
-                      { label: 'SHUTTER_SPEED', value: selectedFeed.shutter },
-                      { label: 'OPTIC_NODE', value: selectedFeed.lens },
-                      { label: 'SIGNAL_STRENGTH', value: 'OPTIMAL' },
-                      { label: 'ENCRYPTION', value: 'AES-256' }
-                    ].map(item => (
-                      <div key={item.label} className="flex justify-between items-center border-b border-white/5 pb-2">
-                        <span className="text-[8px] text-white/20 font-mono">{item.label}</span>
-                        <span className="text-[10px] text-white/80 font-mono">{item.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex-1 flex flex-col justify-end">
-                  <div className="text-[8px] text-white/20 font-mono mb-2 uppercase">Histogram Analysis</div>
-                  <div className="h-20 flex items-end gap-0.5">
-                    {Array.from({ length: 40 }).map((_, i) => (
-                      <motion.div 
-                        key={i}
-                        initial={{ height: 0 }}
-                        animate={{ height: `${Math.random() * 100}%` }}
-                        className="flex-1 bg-signal-green/20"
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
@@ -647,24 +535,24 @@ const ChannelThreads = () => {
         {/* Infinite Scrolling Film Strips */}
         {[1, 2, 3].map((col) => (
           <div key={col} className={`flex-1 relative ${col > 1 ? 'hidden md:block' : ''}`}>
-            <motion.div 
+            <motion.div
               animate={{ y: col % 2 === 0 ? [0, -1000] : [-1000, 0] }}
               transition={{ repeat: Infinity, duration: 40, ease: "linear" }}
               className="flex flex-col gap-4"
             >
               {Array.from({ length: 10 }).map((_, i) => (
                 <div key={i} className="relative aspect-[3/4] bg-white/5 border-x-4 md:border-x-8 border-onyx overflow-hidden group">
-                   {/* Film Sprockets */}
-                   <div className="absolute left-0 top-0 bottom-0 w-1 md:w-2 flex flex-col justify-around py-2 z-10">
-                      {Array.from({ length: 8 }).map((_, j) => <div key={j} className="w-0.5 md:w-1 h-1 md:h-2 bg-onyx rounded-sm" />)}
-                   </div>
-                   <div className="absolute right-0 top-0 bottom-0 w-1 md:w-2 flex flex-col justify-around py-2 z-10">
-                      {Array.from({ length: 8 }).map((_, j) => <div key={j} className="w-0.5 md:w-1 h-1 md:h-2 bg-onyx rounded-sm" />)}
-                   </div>
-                   
-                   <img 
-                    src={`https://picsum.photos/seed/threads-${col}-${i}/600/800`} 
-                    alt="Fashion" 
+                  {/* Film Sprockets */}
+                  <div className="absolute left-0 top-0 bottom-0 w-1 md:w-2 flex flex-col justify-around py-2 z-10">
+                    {Array.from({ length: 8 }).map((_, j) => <div key={j} className="w-0.5 md:w-1 h-1 md:h-2 bg-onyx rounded-sm" />)}
+                  </div>
+                  <div className="absolute right-0 top-0 bottom-0 w-1 md:w-2 flex flex-col justify-around py-2 z-10">
+                    {Array.from({ length: 8 }).map((_, j) => <div key={j} className="w-0.5 md:w-1 h-1 md:h-2 bg-onyx rounded-sm" />)}
+                  </div>
+
+                  <img
+                    src={`https://picsum.photos/seed/threads-${col}-${i}/600/800`}
+                    alt="Fashion"
                     className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity"
                     referrerPolicy="no-referrer"
                   />
@@ -681,7 +569,7 @@ const ChannelThreads = () => {
             </motion.div>
           </div>
         ))}
-        
+
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-6">
           <div className="bg-onyx/80 backdrop-blur-sm border border-white/10 p-8 md:p-12 max-w-md text-center">
             <div className="text-signal-green text-[10px] md:text-xs tracking-[0.5em] mb-4 uppercase">Lookbook Loops</div>
@@ -698,9 +586,9 @@ const ChannelThreads = () => {
 
 const BoxOffice = () => {
   const events = [
-    { id: 1, title: 'MIDNIGHT SATELLITE', date: 'MAR 15', time: '22:00', status: 'LIVE BROADCAST', price: '$25' },
-    { id: 2, title: 'SIGNAL BREACH VOL 2', date: 'APR 02', time: '23:30', status: 'PHYSICAL EVENT', price: '$40' },
-    { id: 3, title: 'ONYX SESSIONS', date: 'APR 20', time: '21:00', status: 'PRIVATE FEED', price: '$15' },
+    { id: 1, title: 'VIBE SERIES', date: 'MAR 19', time: '19:00', status: 'PHYSICAL EVENT', price: 'TICKETS', url: 'https://www.eventbrite.ca/e/vibe-series-tickets-1982595902715' },
+    { id: 2, title: 'TRANSMISSION 02', date: 'TBA', time: '--:--', status: 'LIVE BROADCAST', price: '-' },
+    { id: 3, title: 'ONYX SESSIONS', date: 'TBA', time: '--:--', status: 'PRIVATE FEED', price: '-' },
   ];
 
   return (
@@ -711,9 +599,9 @@ const BoxOffice = () => {
           <h2 className="text-3xl md:text-5xl font-bold tracking-tighter italic">BOX OFFICE</h2>
         </div>
         <div className="flex flex-col md:flex-row gap-4 items-center">
-          <a 
-            href="https://chazzyboo.eventbrite.com" 
-            target="_blank" 
+          <a
+            href="https://chazzyboo.eventbrite.com"
+            target="_blank"
             rel="noopener noreferrer"
             className="w-full md:w-auto px-6 py-3 bg-onyx border border-white/20 hover:border-signal-green hover:text-signal-green transition-all text-[10px] font-bold tracking-widest uppercase flex items-center gap-2"
           >
@@ -729,10 +617,10 @@ const BoxOffice = () => {
 
       <div className="flex-1 space-y-3 md:space-y-4 pb-32 md:pb-0">
         {events.map((event) => (
-          <motion.div 
+          <motion.div
             key={event.id}
             whileHover={{ x: 5 }}
-            className="group flex flex-col md:flex-row md:items-center gap-4 md:gap-8 p-4 md:p-8 border border-white/10 bg-white/5 hover:bg-signal-green hover:text-onyx transition-all duration-300 cursor-pointer"
+            className={`group flex flex-col md:flex-row md:items-center gap-4 md:gap-8 p-4 md:p-8 border border-white/10 bg-white/5 transition-all duration-300 ${event.url ? 'hover:bg-signal-green hover:text-onyx cursor-pointer' : 'opacity-80 grayscale cursor-default'}`}
           >
             <div className="text-xl md:text-2xl font-bold font-mono md:w-24">{event.date}</div>
             <div className="flex-1">
@@ -740,10 +628,21 @@ const BoxOffice = () => {
               <div className="text-xl md:text-3xl font-bold tracking-tighter italic">{event.title}</div>
             </div>
             <div className="flex items-center justify-between md:flex-col md:items-end gap-2">
-              <div className="text-xs md:text-sm font-bold">{event.time} GMT</div>
-              <button className="px-4 md:px-6 py-1.5 md:py-2 border-2 border-current font-bold text-[10px] md:text-xs tracking-widest hover:bg-onyx hover:text-white transition-colors">
-                GET ACCESS
-              </button>
+              <div className="text-xs md:text-sm font-bold">{event.time} {event.date !== 'TBA' && 'PST'}</div>
+              {event.url ? (
+                <a
+                  href={event.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 md:px-6 py-1.5 md:py-2 border-2 border-current font-bold text-[10px] md:text-xs tracking-widest hover:bg-onyx hover:text-white transition-colors inline-block text-center"
+                >
+                  GET TICKETS
+                </a>
+              ) : (
+                <button disabled className="px-4 md:px-6 py-1.5 md:py-2 border-2 border-current font-bold text-[10px] md:text-xs tracking-widest opacity-50 cursor-not-allowed">
+                  STAND BY
+                </button>
+              )}
             </div>
           </motion.div>
         ))}
@@ -765,7 +664,7 @@ const ChannelLatest = ({ feed }: { feed: FeedItem[] }) => {
     }, 5000);
     return () => clearInterval(interval);
   }, [isManual, displayFeed.length]);
-  
+
   if (!latest) return <div className="h-full flex items-center justify-center text-white/20">NO SIGNAL DETECTED</div>;
 
   return (
@@ -775,18 +674,18 @@ const ChannelLatest = ({ feed }: { feed: FeedItem[] }) => {
           <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-broadcast-red animate-pulse" />
           <div className="text-broadcast-red text-[10px] md:text-xs tracking-[0.4em] md:tracking-[0.5em] font-bold uppercase">Breaking Transmission</div>
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 items-start pb-32 md:pb-0">
           <div className="lg:col-span-2 relative aspect-video bg-white/5 border border-white/10 overflow-hidden group">
             <AnimatePresence mode="wait">
-              <motion.img 
+              <motion.img
                 key={latest.id}
                 initial={{ opacity: 0, scale: 1.1 }}
                 animate={{ opacity: 0.8, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.8 }}
-                src={latest.thumbnail} 
-                alt={latest.title} 
+                src={latest.thumbnail}
+                alt={latest.title}
                 className="w-full h-full object-cover group-hover:opacity-100"
                 referrerPolicy="no-referrer"
               />
@@ -795,9 +694,9 @@ const ChannelLatest = ({ feed }: { feed: FeedItem[] }) => {
             <div className="absolute top-3 right-3 md:top-4 md:right-4 bg-black/80 px-2 py-0.5 md:px-3 md:py-1 border border-white/20 text-[8px] md:text-[10px] font-bold tracking-widest uppercase">
               {latest.type} // {new Date(latest.publishedAt).toLocaleDateString()}
             </div>
-            <a 
-              href={latest.url} 
-              target="_blank" 
+            <a
+              href={latest.url}
+              target="_blank"
               rel="noopener noreferrer"
               className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-onyx/40 backdrop-blur-sm"
             >
@@ -818,7 +717,7 @@ const ChannelLatest = ({ feed }: { feed: FeedItem[] }) => {
               >
                 <h2 className="text-2xl md:text-4xl font-bold tracking-tighter italic mb-4 leading-tight">{latest.title}</h2>
                 <p className="text-white/40 text-xs md:text-sm leading-relaxed">
-                  Detected a new frequency from {latest.type}. Signal strength: OPTIMAL. 
+                  Detected a new frequency from {latest.type}. Signal strength: OPTIMAL.
                   Broadcast initiated at {new Date(latest.publishedAt).toLocaleTimeString()}.
                 </p>
               </motion.div>
@@ -830,8 +729,8 @@ const ChannelLatest = ({ feed }: { feed: FeedItem[] }) => {
                 {!isManual && <span className="text-[8px] text-white/20 animate-pulse">AUTO_CYCLE_ACTIVE</span>}
               </div>
               {displayFeed.map((item, idx) => (
-                <button 
-                  key={item.id} 
+                <button
+                  key={item.id}
                   onClick={() => {
                     setCurrentIndex(idx);
                     setIsManual(true);
@@ -860,10 +759,10 @@ const ChannelIntel = () => {
     { platform: 'APPLE_MUSIC', url: 'https://music.apple.com/artist/chazzy-boo', desc: 'Premium sound frequency distribution.', category: 'SOUND' },
     { platform: 'YOUTUBE_MUSIC', url: 'https://music.youtube.com/channel/chazzyboo', desc: 'Google Play / YouTube Music node.', category: 'SOUND' },
     { platform: 'SOUNDCLOUD', url: 'https://soundcloud.com/chazzyboo', desc: 'Sound archives and experimental frequencies.', category: 'SOUND' },
-    { platform: 'INSTAGRAM', url: 'https://instagram.com/chazzy.boo', desc: 'Visual transmission and daily logs.', category: 'VISION' },
-    { platform: 'YOUTUBE', url: 'https://youtube.com/@chazzyboo', desc: 'Broadcast hub for high-definition visuals.', category: 'VISION' },
+    { platform: 'INSTAGRAM', url: 'https://instagram.com/chazzyboo.jpeg', desc: 'Visual transmission and daily logs.', category: 'VISION' },
+    { platform: 'YOUTUBE', url: 'https://youtube.com/@chazzybootv', desc: 'Broadcast hub for high-definition visuals.', category: 'VISION' },
     { platform: 'EVENTBRITE', url: 'https://chazzyboo.eventbrite.com', desc: 'Primary ticketing node for physical events.', category: 'ACCESS' },
-    { platform: 'SPOTIFY', url: 'https://open.spotify.com/artist/chazzyboo', desc: 'Verified sound frequency distribution.', category: 'SOUND' },
+    { platform: 'SPOTIFY', url: 'https://open.spotify.com/artist/0bFrhCc82qmydNx8NCRY9e', desc: 'Verified sound frequency distribution.', category: 'SOUND' },
     { platform: 'X', url: 'https://x.com/ChazzyBoo780', desc: 'Real-time broadcast updates and signal logs.', category: 'INTEL' },
   ];
 
@@ -879,7 +778,7 @@ const ChannelIntel = () => {
       <div className="mb-12 max-w-4xl mx-auto md:mx-0">
         <div className="text-signal-green text-[10px] md:text-xs tracking-[0.3em] mb-2 uppercase">Intercepted Data</div>
         <h2 className="text-2xl md:text-5xl font-bold tracking-tighter italic">INTEL LOGS</h2>
-        
+
         <div className="mt-6 md:mt-8 p-4 md:p-6 border border-white/10 bg-white/5 space-y-6">
           <div>
             <div className="text-[10px] text-signal-green font-bold tracking-widest uppercase mb-2">Identity Profile</div>
@@ -907,7 +806,7 @@ const ChannelIntel = () => {
           >
             <div className="flex justify-between items-start mb-4">
               <div className="text-[10px] text-signal-green font-bold tracking-widest uppercase">{sig.platform}</div>
-              <div className="text-[8px] text-white/20 font-mono">NODE 0{i+1}</div>
+              <div className="text-[8px] text-white/20 font-mono">NODE 0{i + 1}</div>
             </div>
             <div className="text-xl font-bold tracking-tight mb-2 group-hover:text-signal-green transition-colors">
               {sig.platform} SIGNAL
@@ -970,8 +869,8 @@ const ChannelChat = () => {
         </div>
 
         <form onSubmit={sendMessage} className="p-4 border-t border-white/10 flex gap-2">
-          <input 
-            type="text" 
+          <input
+            type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="ENTER MESSAGE..."
@@ -996,16 +895,7 @@ const ChannelBooking = () => {
   ];
 
   const bookedDates = [
-    { date: 'MAR 12', event: 'PRIVATE SESSION', loc: 'NYC' },
-    { date: 'MAR 18', event: 'SATELLITE GIG', loc: 'LA' },
-    { date: 'MAR 25', event: 'CREATIVE NODE', loc: 'VANCOUVER' },
-    { date: 'MAR 28', event: 'VISUAL ARCHIVE', loc: 'VICTORIA' },
-    { date: 'APR 05', event: 'FASHION WEEK NODE', loc: 'PARIS' },
-    { date: 'APR 12', event: 'STUDIO LOCKDOWN', loc: 'LDN' },
-    { date: 'APR 20', event: 'SONIC EXPEDITION', loc: 'EDMONTON' },
-    { date: 'MAY 02', event: 'SIGNAL BREACH', loc: 'TOKYO' },
-    { date: 'MAY 15', event: 'ONYX SESSIONS', loc: 'BERLIN' },
-    { date: 'JUN 01', event: 'GLOBAL BROADCAST', loc: 'DUBAI' },
+    { date: 'MAR 19', event: 'VIBE SERIES', loc: 'VANCOUVER', url: 'https://www.eventbrite.ca/e/vibe-series-tickets-1982595902715' },
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -1028,7 +918,7 @@ const ChannelBooking = () => {
         <div className="space-y-8">
           <div className="grid grid-cols-2 gap-4">
             {services.map((service) => (
-              <div 
+              <div
                 key={service.id}
                 className="p-6 border border-white/10 bg-white/5 flex flex-col items-center gap-4 group hover:border-signal-green transition-all cursor-default"
               >
@@ -1037,14 +927,14 @@ const ChannelBooking = () => {
               </div>
             ))}
           </div>
-          
+
           <div className="p-6 border border-signal-green/20 bg-signal-green/5">
             <div className="flex items-center gap-3 mb-4">
               <Briefcase size={18} className="text-signal-green" />
               <div className="text-xs font-bold tracking-widest text-signal-green uppercase">Current Availability</div>
             </div>
             <p className="text-xs text-white/60 leading-relaxed">
-              Accepting commissions for Q2 2026. Domestic and international travel nodes active. 
+              Accepting commissions for Q2 2026. Domestic and international travel nodes active.
               Response time: &lt; 24 hours.
             </p>
           </div>
@@ -1056,69 +946,74 @@ const ChannelBooking = () => {
             </div>
             <div className="grid grid-cols-1 gap-2">
               {bookedDates.map((item, i) => (
-                <div key={i} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 text-[10px] font-mono">
-                  <div className="flex items-center gap-4">
-                    <span className="text-signal-green">{item.date}</span>
-                    <span className="text-white/60">{item.event}</span>
+                item.url ? (
+                  <a
+                    key={i}
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-4 bg-white/5 border border-white/10 text-[10px] font-mono hover:border-signal-green hover:bg-signal-green/5 transition-all group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className="text-signal-green">{item.date}</span>
+                      <span className="text-white/80 group-hover:text-white transition-colors">{item.event}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-white/40">{item.loc}</span>
+                      <div className="flex items-center gap-1 text-signal-green opacity-50 group-hover:opacity-100 transition-opacity">
+                        <span>TICKETS</span>
+                        <ChevronRight size={12} />
+                      </div>
+                    </div>
+                  </a>
+                ) : (
+                  <div key={i} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 text-[10px] font-mono opacity-50 grayscale">
+                    <div className="flex items-center gap-4">
+                      <span className="text-signal-green/50">{item.date}</span>
+                      <span className="text-white/40">{item.event}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-white/20">{item.loc}</span>
+                      <span className="text-white/20 tracking-widest">[LOCKED]</span>
+                    </div>
                   </div>
-                  <div className="text-white/20">{item.loc}</div>
-                </div>
+                )
               ))}
             </div>
           </div>
         </div>
 
-        <div className="bg-white/5 border border-white/10 p-8 relative overflow-hidden">
-          {status === 'SUCCESS' ? (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="h-full flex flex-col items-center justify-center text-center space-y-4"
-            >
-              <div className="w-16 h-16 rounded-full border-2 border-signal-green flex items-center justify-center text-signal-green">
-                <Send size={32} />
+        <div className="bg-white/5 border border-white/10 p-0 relative overflow-hidden flex flex-col min-h-[500px]">
+          <div className="p-4 md:p-8 border-b border-white/10 bg-black/40">
+            <h3 className="text-xl font-bold tracking-tighter italic flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-signal-green animate-pulse" />
+              TICKET AUTHORIZATION
+            </h3>
+            <p className="text-[10px] text-white/40 font-mono mt-2">SECURE ENCRYPTION NODE ACTIVE</p>
+          </div>
+
+          <div className="flex-1 w-full bg-black relative">
+            {/* Eventbrite Embed */}
+            <iframe
+              src="https://www.eventbrite.ca/checkout-external?eid=1982595902715" // Eventbrite's direct embedded checkout URL format
+              frameBorder="0"
+              height="100%"
+              width="100%"
+              vspace="0"
+              hspace="0"
+              marginHeight="5"
+              marginWidth="5"
+              scrolling="auto"
+              allowTransparency="true"
+              className="absolute inset-0 grayscale contrast-125 opacity-90 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
+            ></iframe>
+
+            <div className="absolute bottom-4 left-4 right-4 pointer-events-none">
+              <div className="text-[8px] font-mono text-white/20 uppercase tracking-widest text-center">
+                POWERED BY EVENTBRITE // SECURE CONNECTION
               </div>
-              <h3 className="text-2xl font-bold italic">SIGNAL SENT</h3>
-              <p className="text-xs text-white/40 max-w-[200px]">Your requisition has been encrypted and broadcast to the central hub.</p>
-              <button 
-                onClick={() => setStatus('IDLE')}
-                className="text-[10px] font-bold tracking-widest text-signal-green hover:text-white transition-colors pt-4"
-              >
-                SEND ANOTHER SIGNAL
-              </button>
-            </motion.div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] text-white/40 font-bold tracking-widest uppercase">Identity Name</label>
-                <input required type="text" className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-signal-green transition-colors" placeholder="ENTER NAME..." />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] text-white/40 font-bold tracking-widest uppercase">Contact Frequency</label>
-                <input required type="email" className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-signal-green transition-colors" placeholder="ENTER EMAIL..." />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] text-white/40 font-bold tracking-widest uppercase">Service Node</label>
-                <select className="w-full bg-onyx border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-signal-green transition-colors appearance-none text-white">
-                  <option>PHOTOGRAPHY</option>
-                  <option>VIDEOGRAPHY</option>
-                  <option>DJ SET</option>
-                  <option>PERFORMANCE</option>
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] text-white/40 font-bold tracking-widest uppercase">Project Parameters</label>
-                <textarea rows={4} className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-signal-green transition-colors resize-none" placeholder="DESCRIBE MISSION..."></textarea>
-              </div>
-              
-              <button 
-                disabled={status === 'SENDING'}
-                className="w-full bg-signal-green text-onyx py-4 font-bold tracking-[0.3em] hover:bg-white transition-all disabled:opacity-50"
-              >
-                {status === 'SENDING' ? 'BROADCASTING...' : 'INITIATE REQUISITION'}
-              </button>
-            </form>
-          )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1141,7 +1036,7 @@ const LiveTicker = () => {
         LIVE INTEL
       </div>
       <div className="flex-1 relative h-full flex items-center">
-        <motion.div 
+        <motion.div
           animate={{ x: [0, -2000] }}
           transition={{ repeat: Infinity, duration: 40, ease: "linear" }}
           className="flex gap-20 whitespace-nowrap"
@@ -1210,7 +1105,7 @@ export default function App() {
   const handleChannelChange = (newChannel: Channel) => {
     if (newChannel === channel) return;
     setIsChanging(true);
-    
+
     const channelObj = [
       { id: 'LATEST', num: '00' },
       { id: 'SOUND', num: '01' },
@@ -1221,7 +1116,7 @@ export default function App() {
       { id: 'CHAT', num: '06' },
       { id: 'BOOKING', num: '07' },
     ].find(c => c.id === newChannel);
-    
+
     if (channelObj) setActiveChannelNum(channelObj.num);
 
     setTimeout(() => {
@@ -1236,7 +1131,7 @@ export default function App() {
       <SignalHUD />
       <AnimatePresence mode="wait">
         {!isStarted && (
-          <motion.div 
+          <motion.div
             key="start"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1247,7 +1142,7 @@ export default function App() {
           </motion.div>
         )}
         {isStarted && isIntro && (
-          <motion.div 
+          <motion.div
             key="intro"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1261,7 +1156,7 @@ export default function App() {
 
       <AnimatePresence>
         {isStarted && !isIntro && channel !== 'INTEL' && channel !== 'BOOKING' && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -1274,16 +1169,16 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       <CRTOverlay />
       <OnAirSign active={isStarted && !isIntro} />
       <CornerBug />
       <LiveTicker />
-      
+
       {isStarted && !isIntro && (
         <>
           <RemoteControl currentChannel={channel} setChannel={handleChannelChange} />
-          
+
           <main className="w-full h-full md:pl-32">
             <AnimatePresence mode="wait">
               <motion.div
@@ -1309,7 +1204,7 @@ export default function App() {
           {/* Channel Switch Glitch Overlay */}
           <AnimatePresence>
             {isChanging && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -1339,22 +1234,22 @@ export default function App() {
           </AnimatePresence>
 
           {/* Ambient Hum Audio */}
-          <audio 
-            autoPlay 
-            loop 
+          <audio
+            autoPlay
+            loop
             muted={!isHumActive}
-            src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" 
+            src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"
             ref={(el) => {
               if (el) {
                 el.volume = 0.15;
-                if (isHumActive) el.play().catch(() => {});
+                if (isHumActive) el.play().catch(() => { });
               }
             }}
           />
 
           {/* Hum Toggle Control */}
           <div className="fixed bottom-24 md:bottom-12 left-6 z-50 flex items-center gap-3">
-            <button 
+            <button
               onClick={() => setIsHumActive(!isHumActive)}
               className={`w-8 h-8 md:w-10 md:h-10 rounded-full border flex items-center justify-center transition-all ${isHumActive ? 'bg-signal-green border-signal-green text-onyx shadow-[0_0_15px_rgba(0,255,65,0.5)]' : 'bg-black/40 border-white/20 text-white/40 hover:border-white/60'}`}
               title="Toggle Ambient Hum"
