@@ -1,0 +1,1375 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { io } from 'socket.io-client';
+import { wordpressService, WPPost } from './services/wordpressService';
+import { 
+  Radio, 
+  Eye, 
+  Shirt, 
+  Ticket, 
+  Activity, 
+  Volume2, 
+  Maximize2, 
+  Play, 
+  Pause,
+  ChevronRight,
+  ChevronLeft,
+  Power,
+  Instagram,
+  Mail,
+  MessageSquare,
+  Send,
+  Calendar,
+  Briefcase
+} from 'lucide-react';
+
+const socket = io();
+
+// --- Constants ---
+const PROFILE_PHOTO = "https://picsum.photos/seed/chazzyboo_profile/800/800";
+
+// --- Types ---
+type Channel = 'LATEST' | 'SOUND' | 'VISION' | 'THREADS' | 'BOXOFFICE' | 'INTEL' | 'CHAT' | 'BOOKING';
+
+interface FeedItem {
+  id: string;
+  type: 'YOUTUBE' | 'INSTAGRAM';
+  title: string;
+  thumbnail: string;
+  publishedAt: string;
+  url: string;
+}
+
+interface ChatMessage {
+  id: string;
+  user: string;
+  text: string;
+  timestamp: string;
+}
+
+// --- Components ---
+
+const CustomCursor = () => {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isPointer, setIsPointer] = useState(false);
+  const [trail, setTrail] = useState<{ x: number, y: number, id: number }[]>([]);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setPosition({ x: e.clientX, y: e.clientY });
+      
+      const target = e.target as HTMLElement;
+      setIsPointer(window.getComputedStyle(target).cursor === 'pointer');
+
+      setTrail(prev => [
+        ...prev.slice(-10),
+        { x: e.clientX, y: e.clientY, id: Date.now() }
+      ]);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  return (
+    <>
+      <div 
+        className="custom-cursor" 
+        style={{ 
+          left: position.x, 
+          top: position.y,
+          width: isPointer ? '40px' : '24px',
+          height: isPointer ? '40px' : '24px',
+          borderColor: isPointer ? '#FF0000' : '#00FF41'
+        }} 
+      />
+      {trail.map((t, i) => (
+        <div 
+          key={t.id} 
+          className="cursor-trail" 
+          style={{ 
+            left: t.x, 
+            top: t.y, 
+            opacity: (i / trail.length) * 0.5,
+            transform: `scale(${i / trail.length})`
+          }} 
+        />
+      ))}
+    </>
+  );
+};
+
+const SignalHUD = () => {
+  const [strength, setStrength] = useState(100);
+  const [lastMove, setLastMove] = useState(Date.now());
+
+  useEffect(() => {
+    const handleMove = () => setLastMove(Date.now());
+    window.addEventListener('mousemove', handleMove);
+    
+    const interval = setInterval(() => {
+      const idleTime = Date.now() - lastMove;
+      if (idleTime > 2000) {
+        setStrength(prev => Math.max(40, prev - (Math.random() * 5)));
+      } else {
+        setStrength(prev => Math.min(100, prev + (Math.random() * 10)));
+      }
+    }, 500);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      clearInterval(interval);
+    };
+  }, [lastMove]);
+
+  return (
+    <div className="fixed top-6 left-6 z-50 flex flex-col gap-1 pointer-events-none">
+      <div className="flex items-center gap-2">
+        <div className="text-[10px] font-bold tracking-widest text-signal-green uppercase">Signal Strength</div>
+        <div className="text-[10px] font-mono text-white/40">{Math.round(strength)}%</div>
+      </div>
+      <div className="w-32 h-1 bg-white/5 border border-white/10 overflow-hidden">
+        <motion.div 
+          animate={{ 
+            width: `${strength}%`,
+            backgroundColor: strength < 60 ? '#FF0000' : '#00FF41'
+          }}
+          className="h-full"
+        />
+      </div>
+      <div className="text-[8px] font-mono text-white/20 uppercase tracking-tighter">
+        {strength < 60 ? 'WARNING: SIGNAL DEGRADATION' : 'ENCRYPTED_LINK_STABLE'}
+      </div>
+    </div>
+  );
+};
+
+const DecryptedText = ({ text, className = "" }: { text: string, className?: string }) => {
+  const [displayText, setDisplayText] = useState("");
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+
+  useEffect(() => {
+    let iteration = 0;
+    const interval = setInterval(() => {
+      setDisplayText(text.split("").map((char, index) => {
+        if (index < iteration) return text[index];
+        if (char === " " || char === "\n") return char;
+        return characters[Math.floor(Math.random() * characters.length)];
+      }).join(""));
+
+      if (iteration >= text.length) clearInterval(interval);
+      iteration += 1;
+    }, 30);
+
+    return () => clearInterval(interval);
+  }, [text]);
+
+  return <span className={className}>{displayText}</span>;
+};
+
+const CRTOverlay = () => (
+  <div className="crt-overlay crt-flicker pointer-events-none" />
+);
+
+const OnAirSign = ({ active }: { active: boolean }) => (
+  <div className="fixed top-2 right-2 md:top-6 md:right-6 z-50 flex flex-col items-end gap-1 md:gap-4">
+    <div className="flex items-center gap-2">
+      <motion.div 
+        animate={{ 
+          opacity: active ? [1, 0.4, 1] : 0.2,
+          scale: active ? [1, 1.05, 1] : 1
+        }}
+        transition={{ repeat: Infinity, duration: 1.5 }}
+        className={`px-1.5 py-0.5 md:px-3 md:py-1 border-2 font-bold text-[8px] md:text-xs tracking-widest ${
+          active ? 'border-broadcast-red text-broadcast-red bg-broadcast-red/10' : 'border-white/20 text-white/20'
+        }`}
+      >
+        ON AIR
+      </motion.div>
+    </div>
+
+    {active && (
+      <motion.div 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col gap-1 md:gap-2 items-end"
+      >
+        <a 
+          href="https://instagram.com/chazzy.boo" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-1.5 py-1 md:px-3 md:py-2 bg-white/5 border border-white/10 hover:bg-signal-green hover:text-onyx transition-all text-[8px] md:text-[10px] font-bold tracking-widest"
+        >
+          <Instagram size={10} className="md:w-3.5 md:h-3.5" />
+          @CHAZZY.BOO
+        </a>
+        <a 
+          href="mailto:chazzyboo.inquiries@gmail.com" 
+          className="flex items-center gap-1.5 px-1.5 py-1 md:px-3 md:py-2 bg-white/5 border border-white/10 hover:bg-signal-green hover:text-onyx transition-all text-[8px] md:text-[10px] font-bold tracking-widest"
+        >
+          <Mail size={10} className="md:w-3.5 md:h-3.5" />
+          CONTACT HUB
+        </a>
+      </motion.div>
+    )}
+  </div>
+);
+
+const StartScreen = ({ onStart }: { onStart: () => void }) => {
+  const [isExiting, setIsExiting] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress(prev => (prev < 100 ? prev + Math.random() * 15 : 100));
+    }, 200);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleStart = () => {
+    if (progress < 100) return;
+    setIsExiting(true);
+    setTimeout(onStart, 1000);
+  };
+
+  return (
+    <div className={`w-full h-full bg-black flex flex-col items-center justify-center p-6 text-center overflow-hidden relative ${isExiting ? 'tunnel-zoom' : ''}`}>
+      {/* Intense Static Layers */}
+      <div className="absolute inset-0 z-0">
+        <div className="intense-static" />
+        <div className="rgb-static-container opacity-30">
+          <div className="rgb-layer rgb-layer-r" />
+          <div className="rgb-layer rgb-layer-g" />
+          <div className="rgb-layer rgb-layer-b" />
+        </div>
+        <div className="static-flash" />
+        <div className="glitch-scanline" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-black via-transparent to-black/60" />
+      </div>
+
+      {/* Abstract Artistic Elements */}
+      <div className="absolute top-10 left-10 w-32 h-32 border border-white/10 rounded-full animate-pulse pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-64 h-64 border-r border-b border-white/5 pointer-events-none" />
+      
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative z-10 w-full max-w-4xl"
+      >
+        <div className="mb-12">
+          <motion.div 
+            initial={{ letterSpacing: '0.1em' }}
+            animate={{ letterSpacing: '0.8em' }}
+            transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse' }}
+            className="text-signal-green text-[10px] md:text-xs uppercase font-bold mb-4"
+          >
+            Establishing Connection
+          </motion.div>
+          
+          <h1 className="text-[10vw] md:text-[8vw] font-black tracking-tighter italic leading-none chromatic-aberration mb-4">
+            CHAZZY BOO<br/>
+            <span className="text-white">TV</span>
+          </h1>
+        </div>
+        
+        <div className="flex flex-col items-center gap-8">
+          {/* Progress Bar */}
+          <div className="w-64 h-1 bg-white/10 relative overflow-hidden">
+            <motion.div 
+              className="absolute top-0 left-0 h-full bg-signal-green"
+              initial={{ width: '0%' }}
+              animate={{ width: `${progress}%` }}
+            />
+          </div>
+
+          <div className="flex flex-col items-center gap-4">
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleStart}
+              disabled={progress < 100}
+              className={`brutalist-btn ${progress < 100 ? 'opacity-20 cursor-not-allowed' : 'opacity-100'}`}
+            >
+              <div className="flex items-center gap-4">
+                <Power size={20} className={progress >= 100 ? 'text-broadcast-red' : 'text-white/20'} />
+                {progress < 100 ? 'SYNCING...' : 'TUNE IN'}
+              </div>
+            </motion.button>
+            
+            <div className="text-[9px] text-white/40 font-mono tracking-widest uppercase flex gap-4">
+              <span>Signal: {Math.round(progress)}%</span>
+              <span className="text-white/10">|</span>
+              <span>Node: 092-CHAZZYBOOTV</span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+      
+      {/* Vertical Rail Text */}
+      <div className="absolute left-6 top-1/2 -translate-y-1/2 hidden md:block">
+        <div className="writing-mode-vertical text-[8px] text-white/20 tracking-[1em] uppercase">
+          Broadcast Noir // Creative Frequency
+        </div>
+      </div>
+
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col md:flex-row gap-4 md:gap-12 text-[8px] text-white/10 font-mono tracking-widest uppercase z-10 text-center">
+        <span>©2026 CHAZZYBOOTV BROADCASTING</span>
+        <span className="hidden md:inline text-white/5">|</span>
+        <span>ALL RIGHTS RESERVED</span>
+      </div>
+    </div>
+  );
+};
+
+const CornerBug = () => (
+  <div className="fixed bottom-24 md:bottom-12 right-4 md:right-6 z-50 opacity-40 pointer-events-none">
+    <div className="text-right">
+      <div className="text-[8px] md:text-xs font-bold tracking-tighter">CHAZZYBOOTV</div>
+      <div className="text-[6px] md:text-[10px] tracking-widest text-signal-green uppercase">Signal 092</div>
+    </div>
+  </div>
+);
+
+const GlitchIntro = ({ onComplete }: { onComplete: () => void }) => {
+  useEffect(() => {
+    const timer = setTimeout(onComplete, 2000);
+    return () => clearTimeout(timer);
+  }, [onComplete]);
+
+  return (
+    <div className="w-full h-full bg-black flex flex-col items-center justify-center overflow-hidden">
+      {/* Color Bars */}
+      <div className="absolute inset-0 flex">
+        {['#FFFFFF', '#FFFF00', '#00FFFF', '#00FF00', '#FF00FF', '#FF0000', '#0000FF'].map((color, i) => (
+          <div key={i} className="flex-1 h-full" style={{ backgroundColor: color }} />
+        ))}
+      </div>
+      
+      {/* Static Glitch Overlay */}
+      <motion.div 
+        animate={{ 
+          x: [-10, 10, -5, 5, 0],
+          opacity: [0.8, 0.4, 0.9, 0.5, 0.8]
+        }}
+        transition={{ repeat: Infinity, duration: 0.1 }}
+        className="absolute inset-0 bg-[url('https://media.giphy.com/media/oEI9uWUznW3D2/giphy.gif')] bg-cover opacity-20 mix-blend-overlay"
+      />
+
+      <div className="relative z-10 bg-black px-8 py-4 border-4 border-white">
+        <h1 className="text-4xl font-bold tracking-tighter italic">CHAZZYBOOTV</h1>
+        <div className="text-center text-xs mt-2 tracking-[0.5em] text-signal-green">ESTABLISHING CONNECTION...</div>
+      </div>
+    </div>
+  );
+};
+
+const RemoteControl = ({ currentChannel, setChannel }: { currentChannel: Channel, setChannel: (c: Channel) => void }) => {
+  const channels: { id: Channel; icon: any; label: string; num: string }[] = [
+    { id: 'LATEST', icon: Activity, label: 'LATEST', num: '00' },
+    { id: 'SOUND', icon: Radio, label: 'SOUND', num: '01' },
+    { id: 'VISION', icon: Eye, label: 'VISION', num: '02' },
+    { id: 'THREADS', icon: Shirt, label: 'THREADS', num: '03' },
+    { id: 'BOXOFFICE', icon: Ticket, label: 'ACCESS', num: '04' },
+    { id: 'INTEL', icon: Maximize2, label: 'INTEL', num: '05' },
+    { id: 'CHAT', icon: MessageSquare, label: 'CHAT', num: '06' },
+    { id: 'BOOKING', icon: Calendar, label: 'BOOKING', num: '07' },
+  ];
+
+  return (
+    <div className="fixed bottom-12 left-1/2 -translate-x-1/2 md:left-8 md:top-1/2 md:-translate-y-1/2 md:translate-x-0 z-50 flex flex-col gap-4 w-[96vw] md:w-auto">
+      <div className="bg-white/5 backdrop-blur-2xl border border-white/10 p-0.5 md:p-4 rounded-lg md:rounded-2xl flex flex-row md:flex-col gap-0.5 md:gap-6 items-center">
+        <div className="hidden md:flex justify-center">
+          <div className="w-8 h-8 rounded-full bg-broadcast-red/20 flex items-center justify-center border border-broadcast-red/40">
+            <Power size={14} className="text-broadcast-red" />
+          </div>
+        </div>
+        
+        <div className="flex flex-row md:flex-col gap-0.5 md:gap-2 flex-1 w-full">
+          {channels.map((ch) => (
+            <button
+              key={ch.id}
+              onClick={() => setChannel(ch.id)}
+              className={`flex-1 md:flex-none group relative flex items-center justify-center h-8 md:w-12 md:h-12 rounded-md md:rounded-xl transition-all duration-300 ${
+                currentChannel === ch.id 
+                  ? 'bg-signal-green text-onyx shadow-[0_0_15px_rgba(0,255,65,0.5)]' 
+                  : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <ch.icon size={12} className="md:w-5 md:h-5" />
+              <div className="hidden md:block absolute left-16 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                <span className="text-[10px] text-signal-green mr-2">{ch.num}</span>
+                <span className="text-xs font-bold tracking-widest">{ch.label}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <div className="hidden md:flex flex-col gap-2 pt-4 border-t border-white/10">
+          <button className="w-12 h-8 bg-white/5 rounded-md flex items-center justify-center text-white/40 hover:text-white">
+            <ChevronRight size={16} />
+          </button>
+          <button className="w-12 h-8 bg-white/5 rounded-md flex items-center justify-center text-white/40 hover:text-white">
+            <ChevronLeft size={16} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Channel Views ---
+
+const ChannelSound = () => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  
+  return (
+    <div className="h-full flex flex-col items-center justify-center p-4 md:p-20 overflow-y-auto">
+      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center py-16 md:py-0">
+        <div className="relative aspect-square bg-white/5 border border-white/10 overflow-hidden group max-w-[280px] md:max-w-sm mx-auto w-full">
+          <img 
+            src={PROFILE_PHOTO} 
+            alt="Chazzy Boo Profile" 
+            className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity"
+            referrerPolicy="no-referrer"
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <motion.button 
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setIsPlaying(!isPlaying)}
+              className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-signal-green text-onyx flex items-center justify-center shadow-2xl"
+            >
+              {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} className="ml-1" fill="currentColor" />}
+            </motion.button>
+          </div>
+          
+          {/* Equalizer Overlay */}
+          <div className="absolute bottom-0 left-0 right-0 h-16 md:h-24 flex items-end gap-0.5 md:gap-1 px-2 md:px-4 pb-2 md:pb-4 overflow-hidden pointer-events-none">
+            {Array.from({ length: 30 }).map((_, i) => (
+              <motion.div
+                key={i}
+                animate={{ height: isPlaying ? [5, Math.random() * 60 + 5, 5] : 2 }}
+                transition={{ repeat: Infinity, duration: 0.5 + Math.random() * 0.5 }}
+                className="flex-1 bg-signal-green/40"
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-6 md:space-y-8">
+          <div>
+            <div className="text-signal-green text-[10px] md:text-xs tracking-[0.3em] mb-2 uppercase">Now Broadcasting</div>
+            <h2 className="text-3xl md:text-5xl font-bold tracking-tighter mb-4 italic">FREQUENCY 01</h2>
+            <p className="text-white/60 text-sm md:text-base leading-relaxed max-w-md">
+              A sonic exploration of midnight frequencies. Blending industrial textures with deep atmospheric resonance.
+            </p>
+          </div>
+
+          <div className="space-y-3 md:space-y-4">
+            <div className="flex items-center justify-between p-3 md:p-4 border border-white/10 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group">
+              <div className="flex items-center gap-3 md:gap-4">
+                <span className="text-[10px] md:text-xs text-signal-green">01</span>
+                <span className="font-bold text-sm md:text-base">SATELLITE DREAM</span>
+              </div>
+              <Volume2 size={14} className="text-white/20 group-hover:text-signal-green" />
+            </div>
+            <div className="flex items-center justify-between p-3 md:p-4 border border-white/10 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group">
+              <div className="flex items-center gap-3 md:gap-4">
+                <span className="text-[10px] md:text-xs text-signal-green">02</span>
+                <span className="font-bold text-sm md:text-base">NOIR SIGNAL</span>
+              </div>
+              <Volume2 size={14} className="text-white/20 group-hover:text-signal-green" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ChannelVision = () => {
+  const [selectedFeed, setSelectedFeed] = useState<any>(null);
+  const feeds = [
+    { id: 1, src: PROFILE_PHOTO, label: 'MAIN PROFILE NODE', iso: 400, shutter: '1/125', lens: '35mm f/1.4' },
+    { id: 2, src: 'https://picsum.photos/seed/chazzy2/800/600', label: 'PRIMARY FEED 02', iso: 800, shutter: '1/60', lens: '50mm f/1.8' },
+    { id: 3, src: 'https://picsum.photos/seed/chazzy3/800/600', label: 'CREATIVE WORK 01', iso: 100, shutter: '1/1000', lens: '85mm f/1.2' },
+    { id: 4, src: 'https://picsum.photos/seed/chazzy4/800/600', label: 'CREATIVE WORK 02', iso: 1600, shutter: '1/30', lens: '24mm f/2.8' },
+    { id: 5, src: 'https://picsum.photos/seed/chazzy5/800/600', label: 'SIGNAL ARCHIVE 01', iso: 200, shutter: '1/250', lens: '35mm f/1.4' },
+    { id: 6, src: 'https://picsum.photos/seed/chazzy6/800/600', label: 'SIGNAL ARCHIVE 02', iso: 400, shutter: '1/500', lens: '50mm f/1.8' },
+    { id: 7, src: 'https://picsum.photos/seed/chazzy7/800/600', label: 'MIDNIGHT TRANSMISSION', iso: 3200, shutter: '1/15', lens: '35mm f/1.4' },
+    { id: 8, src: 'https://picsum.photos/seed/chazzy8/800/600', label: 'URBAN TEXTURE 01', iso: 400, shutter: '1/200', lens: '50mm f/1.2' },
+    { id: 9, src: 'https://picsum.photos/seed/chazzy9/800/600', label: 'ATMOSPHERIC NODE', iso: 100, shutter: '1/4000', lens: '24mm f/1.4' },
+    { id: 10, src: 'https://picsum.photos/seed/chazzy10/800/600', label: 'INDUSTRIAL FORM', iso: 800, shutter: '1/125', lens: '85mm f/1.8' },
+    { id: 11, src: 'https://picsum.photos/seed/chazzy11/800/600', label: 'SIGNAL BREACH 03', iso: 1600, shutter: '1/60', lens: '35mm f/1.4' },
+    { id: 12, src: 'https://picsum.photos/seed/chazzy12/800/600', label: 'NOIR ARCHIVE 04', iso: 200, shutter: '1/500', lens: '50mm f/1.2' },
+  ];
+
+  return (
+    <div className="h-full p-4 md:p-24 overflow-y-auto bg-[#1a1a1a]">
+      <div className="mb-8 md:mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4 pt-16 md:pt-0 border-b border-white/20 pb-8">
+        <div>
+          <div className="text-electric-blue text-[10px] md:text-xs tracking-[0.3em] mb-2 uppercase">Surveillance Feed</div>
+          <h2 className="text-2xl md:text-5xl font-bold tracking-tighter italic">VISUAL ARCHIVE</h2>
+        </div>
+        <div className="text-left md:text-right text-[8px] md:text-[10px] text-white/40 font-mono">
+          CONTACT SHEET // 092-CBTV<br />
+          LOC: UNDISCLOSED STUDIO
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 pb-32 md:pb-0 max-w-sm md:max-w-none mx-auto">
+        {feeds.map((feed, i) => (
+          <motion.div 
+            key={feed.id}
+            whileHover={{ scale: 1.02 }}
+            onClick={() => setSelectedFeed(feed)}
+            className="relative group bg-black p-4 shadow-2xl border-b-[20px] border-black cursor-pointer"
+          >
+            {/* Frame Number */}
+            <div className="absolute -top-6 left-0 text-[10px] font-mono text-white/20">
+              FRAME {String(i + 1).padStart(2, '0')}
+            </div>
+            
+            <div className="relative aspect-[4/5] overflow-hidden bg-onyx">
+              <img 
+                src={feed.src} 
+                alt={feed.label} 
+                className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-700 grayscale group-hover:grayscale-0 scale-110 group-hover:scale-100"
+                referrerPolicy="no-referrer"
+              />
+              
+              {/* Film Grain Overlay */}
+              <div className="absolute inset-0 pointer-events-none noise-bg opacity-10 group-hover:opacity-20 transition-opacity" />
+              
+              {/* Metadata HUD */}
+              <div className="absolute inset-0 flex flex-col justify-end p-6 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0 bg-gradient-to-t from-black/80 to-transparent">
+                <div className="text-[10px] text-signal-green font-mono mb-1 uppercase tracking-widest">{feed.label}</div>
+                <div className="flex gap-4 text-[9px] text-white/60 font-mono">
+                  <span>ISO {feed.iso}</span>
+                  <span>{feed.shutter}</span>
+                  <span>{feed.lens}</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Sprockets */}
+            <div className="absolute -bottom-4 left-0 right-0 flex justify-around px-4">
+              {Array.from({ length: 4 }).map((_, j) => (
+                <div key={j} className="w-4 h-2 bg-white/5 rounded-sm" />
+              ))}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Analysis Mode Overlay */}
+      <AnimatePresence>
+        {selectedFeed && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[300] bg-black/95 flex items-center justify-center p-4 md:p-12"
+          >
+            <div className="absolute top-8 right-8 z-10">
+              <button 
+                onClick={() => setSelectedFeed(null)}
+                className="text-white/40 hover:text-signal-green transition-colors flex items-center gap-2 text-xs font-bold tracking-widest"
+              >
+                CLOSE_ANALYSIS <ChevronRight size={16} />
+              </button>
+            </div>
+
+            <div className="relative w-full max-w-5xl aspect-[4/5] md:aspect-video bg-black border border-white/10 overflow-hidden flex flex-col md:flex-row">
+              <div className="relative flex-1 bg-onyx overflow-hidden">
+                <img 
+                  src={selectedFeed.src} 
+                  className="w-full h-full object-cover opacity-80"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="scan-line-analysis" />
+                <div className="absolute inset-0 pointer-events-none border-[20px] border-black/20" />
+                
+                {/* HUD Elements */}
+                <div className="absolute top-4 left-4 text-[10px] font-mono text-signal-green bg-black/60 px-2 py-1">
+                  ANALYSIS_ACTIVE // {selectedFeed.label}
+                </div>
+                <div className="absolute bottom-4 right-4 text-[10px] font-mono text-white/40 bg-black/60 px-2 py-1">
+                  COORD: 53.5461° N, 113.4938° W
+                </div>
+              </div>
+
+              <div className="w-full md:w-80 bg-black border-l border-white/10 p-6 flex flex-col gap-6">
+                <div>
+                  <div className="text-[10px] text-signal-green font-bold tracking-widest uppercase mb-4">Technical Data</div>
+                  <div className="space-y-4">
+                    {[
+                      { label: 'ISO_SENSITIVITY', value: selectedFeed.iso },
+                      { label: 'SHUTTER_SPEED', value: selectedFeed.shutter },
+                      { label: 'OPTIC_NODE', value: selectedFeed.lens },
+                      { label: 'SIGNAL_STRENGTH', value: 'OPTIMAL' },
+                      { label: 'ENCRYPTION', value: 'AES-256' }
+                    ].map(item => (
+                      <div key={item.label} className="flex justify-between items-center border-b border-white/5 pb-2">
+                        <span className="text-[8px] text-white/20 font-mono">{item.label}</span>
+                        <span className="text-[10px] text-white/80 font-mono">{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex-1 flex flex-col justify-end">
+                  <div className="text-[8px] text-white/20 font-mono mb-2 uppercase">Histogram Analysis</div>
+                  <div className="h-20 flex items-end gap-0.5">
+                    {Array.from({ length: 40 }).map((_, i) => (
+                      <motion.div 
+                        key={i}
+                        initial={{ height: 0 }}
+                        animate={{ height: `${Math.random() * 100}%` }}
+                        className="flex-1 bg-signal-green/20"
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+const ChannelThreads = () => {
+  return (
+    <div className="h-full flex items-center justify-center p-0 pb-32 md:pb-0">
+      <div className="w-full max-w-6xl flex gap-4 md:gap-8 h-full md:h-[80vh] overflow-hidden pt-16 md:pt-0">
+        {/* Infinite Scrolling Film Strips */}
+        {[1, 2, 3].map((col) => (
+          <div key={col} className={`flex-1 relative ${col > 1 ? 'hidden md:block' : ''}`}>
+            <motion.div 
+              animate={{ y: col % 2 === 0 ? [0, -1000] : [-1000, 0] }}
+              transition={{ repeat: Infinity, duration: 40, ease: "linear" }}
+              className="flex flex-col gap-4"
+            >
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="relative aspect-[3/4] bg-white/5 border-x-4 md:border-x-8 border-onyx overflow-hidden group">
+                   {/* Film Sprockets */}
+                   <div className="absolute left-0 top-0 bottom-0 w-1 md:w-2 flex flex-col justify-around py-2 z-10">
+                      {Array.from({ length: 8 }).map((_, j) => <div key={j} className="w-0.5 md:w-1 h-1 md:h-2 bg-onyx rounded-sm" />)}
+                   </div>
+                   <div className="absolute right-0 top-0 bottom-0 w-1 md:w-2 flex flex-col justify-around py-2 z-10">
+                      {Array.from({ length: 8 }).map((_, j) => <div key={j} className="w-0.5 md:w-1 h-1 md:h-2 bg-onyx rounded-sm" />)}
+                   </div>
+                   
+                   <img 
+                    src={`https://picsum.photos/seed/threads-${col}-${i}/600/800`} 
+                    alt="Fashion" 
+                    className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity"
+                    referrerPolicy="no-referrer"
+                  />
+
+                  {/* Loupe Effect */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-300">
+                    <div className="absolute inset-0 bg-signal-green/10 mix-blend-overlay" />
+                    <div className="absolute top-4 left-4 text-[8px] font-mono text-signal-green bg-black/60 px-1 py-0.5 uppercase">
+                      Magnify_Node_{col}_{i}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+        ))}
+        
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-6">
+          <div className="bg-onyx/80 backdrop-blur-sm border border-white/10 p-8 md:p-12 max-w-md text-center">
+            <div className="text-signal-green text-[10px] md:text-xs tracking-[0.5em] mb-4 uppercase">Lookbook Loops</div>
+            <h2 className="text-4xl md:text-6xl font-bold tracking-tighter italic mb-6">THREADS</h2>
+            <p className="text-xs md:text-sm text-white/60 leading-relaxed">
+              Visual narratives through textile and form. A collaboration of aesthetic frequencies.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const BoxOffice = () => {
+  const events = [
+    { id: 1, title: 'MIDNIGHT SATELLITE', date: 'MAR 15', time: '22:00', status: 'LIVE BROADCAST', price: '$25' },
+    { id: 2, title: 'SIGNAL BREACH VOL 2', date: 'APR 02', time: '23:30', status: 'PHYSICAL EVENT', price: '$40' },
+    { id: 3, title: 'ONYX SESSIONS', date: 'APR 20', time: '21:00', status: 'PRIVATE FEED', price: '$15' },
+  ];
+
+  return (
+    <div className="h-full p-4 md:p-24 flex flex-col overflow-y-auto pt-24 md:pt-24">
+      <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-8 md:mb-16">
+        <div>
+          <div className="text-broadcast-red text-[10px] md:text-xs tracking-[0.3em] mb-2 uppercase">Scheduled Broadcasts</div>
+          <h2 className="text-3xl md:text-5xl font-bold tracking-tighter italic">BOX OFFICE</h2>
+        </div>
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+          <a 
+            href="https://chazzyboo.eventbrite.com" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="w-full md:w-auto px-6 py-3 bg-onyx border border-white/20 hover:border-signal-green hover:text-signal-green transition-all text-[10px] font-bold tracking-widest uppercase flex items-center gap-2"
+          >
+            <Ticket size={14} />
+            VIEW ON EVENTBRITE
+          </a>
+          <div className="w-full md:w-auto bg-broadcast-red/10 border border-broadcast-red p-4 md:p-6 text-center">
+            <div className="text-[8px] md:text-[10px] text-broadcast-red tracking-widest mb-1 uppercase">Next Transmission</div>
+            <div className="text-2xl md:text-4xl font-bold font-mono text-broadcast-red">14:22:09:44</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 space-y-3 md:space-y-4 pb-32 md:pb-0">
+        {events.map((event) => (
+          <motion.div 
+            key={event.id}
+            whileHover={{ x: 5 }}
+            className="group flex flex-col md:flex-row md:items-center gap-4 md:gap-8 p-4 md:p-8 border border-white/10 bg-white/5 hover:bg-signal-green hover:text-onyx transition-all duration-300 cursor-pointer"
+          >
+            <div className="text-xl md:text-2xl font-bold font-mono md:w-24">{event.date}</div>
+            <div className="flex-1">
+              <div className="text-[8px] md:text-[10px] tracking-widest opacity-60 group-hover:opacity-100 mb-1 uppercase">{event.status}</div>
+              <div className="text-xl md:text-3xl font-bold tracking-tighter italic">{event.title}</div>
+            </div>
+            <div className="flex items-center justify-between md:flex-col md:items-end gap-2">
+              <div className="text-xs md:text-sm font-bold">{event.time} GMT</div>
+              <button className="px-4 md:px-6 py-1.5 md:py-2 border-2 border-current font-bold text-[10px] md:text-xs tracking-widest hover:bg-onyx hover:text-white transition-colors">
+                GET ACCESS
+              </button>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const ChannelLatest = ({ feed }: { feed: FeedItem[] }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isManual, setIsManual] = useState(false);
+  const displayFeed = feed.slice(0, 5);
+  const latest = displayFeed[currentIndex];
+
+  useEffect(() => {
+    if (isManual || displayFeed.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % displayFeed.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [isManual, displayFeed.length]);
+  
+  if (!latest) return <div className="h-full flex items-center justify-center text-white/20">NO SIGNAL DETECTED</div>;
+
+  return (
+    <div className="h-full flex flex-col items-center justify-center p-4 md:p-20 overflow-y-auto">
+      <div className="w-full max-w-5xl pt-24 md:pt-0">
+        <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
+          <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-broadcast-red animate-pulse" />
+          <div className="text-broadcast-red text-[10px] md:text-xs tracking-[0.4em] md:tracking-[0.5em] font-bold uppercase">Breaking Transmission</div>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 items-start pb-32 md:pb-0">
+          <div className="lg:col-span-2 relative aspect-video bg-white/5 border border-white/10 overflow-hidden group">
+            <AnimatePresence mode="wait">
+              <motion.img 
+                key={latest.id}
+                initial={{ opacity: 0, scale: 1.1 }}
+                animate={{ opacity: 0.8, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.8 }}
+                src={latest.thumbnail} 
+                alt={latest.title} 
+                className="w-full h-full object-cover group-hover:opacity-100"
+                referrerPolicy="no-referrer"
+              />
+            </AnimatePresence>
+            <div className="absolute inset-0 bg-gradient-to-t from-onyx via-transparent to-transparent opacity-60" />
+            <div className="absolute top-3 right-3 md:top-4 md:right-4 bg-black/80 px-2 py-0.5 md:px-3 md:py-1 border border-white/20 text-[8px] md:text-[10px] font-bold tracking-widest uppercase">
+              {latest.type} // {new Date(latest.publishedAt).toLocaleDateString()}
+            </div>
+            <a 
+              href={latest.url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-onyx/40 backdrop-blur-sm"
+            >
+              <div className="flex items-center gap-2 md:gap-3 px-6 py-3 md:px-8 md:py-4 border-2 border-signal-green text-signal-green font-bold tracking-[0.15em] md:tracking-[0.2em] text-xs md:text-base">
+                <Play size={18} fill="currentColor" />
+                TUNE IN NOW
+              </div>
+            </a>
+          </div>
+
+          <div className="space-y-6 md:space-y-8">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={latest.id}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+              >
+                <h2 className="text-2xl md:text-4xl font-bold tracking-tighter italic mb-4 leading-tight">{latest.title}</h2>
+                <p className="text-white/40 text-xs md:text-sm leading-relaxed">
+                  Detected a new frequency from {latest.type}. Signal strength: OPTIMAL. 
+                  Broadcast initiated at {new Date(latest.publishedAt).toLocaleTimeString()}.
+                </p>
+              </motion.div>
+            </AnimatePresence>
+
+            <div className="space-y-3 md:space-y-4 pt-6 md:pt-8 border-t border-white/10">
+              <div className="text-[9px] md:text-[10px] text-signal-green tracking-widest uppercase mb-2 md:mb-4 flex justify-between items-center">
+                <span>Recent Signals</span>
+                {!isManual && <span className="text-[8px] text-white/20 animate-pulse">AUTO_CYCLE_ACTIVE</span>}
+              </div>
+              {displayFeed.map((item, idx) => (
+                <button 
+                  key={item.id} 
+                  onClick={() => {
+                    setCurrentIndex(idx);
+                    setIsManual(true);
+                  }}
+                  className={`w-full flex items-center gap-3 md:gap-4 group cursor-pointer text-left transition-all ${currentIndex === idx ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
+                >
+                  <div className={`w-12 md:w-16 aspect-video bg-white/10 overflow-hidden border ${currentIndex === idx ? 'border-signal-green' : 'border-white/10'}`}>
+                    <img src={item.thumbnail} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[8px] md:text-[9px] uppercase tracking-widest">{item.type}</div>
+                    <div className={`text-[10px] md:text-xs font-bold truncate ${currentIndex === idx ? 'text-signal-green' : 'group-hover:text-signal-green'} transition-colors`}>{item.title}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ChannelIntel = () => {
+  const signals = [
+    { platform: 'APPLE_MUSIC', url: 'https://music.apple.com/artist/chazzy-boo', desc: 'Premium sound frequency distribution.', category: 'SOUND' },
+    { platform: 'YOUTUBE_MUSIC', url: 'https://music.youtube.com/channel/chazzyboo', desc: 'Google Play / YouTube Music node.', category: 'SOUND' },
+    { platform: 'SOUNDCLOUD', url: 'https://soundcloud.com/chazzyboo', desc: 'Sound archives and experimental frequencies.', category: 'SOUND' },
+    { platform: 'INSTAGRAM', url: 'https://instagram.com/chazzy.boo', desc: 'Visual transmission and daily logs.', category: 'VISION' },
+    { platform: 'YOUTUBE', url: 'https://youtube.com/@chazzyboo', desc: 'Broadcast hub for high-definition visuals.', category: 'VISION' },
+    { platform: 'EVENTBRITE', url: 'https://chazzyboo.eventbrite.com', desc: 'Primary ticketing node for physical events.', category: 'ACCESS' },
+    { platform: 'SPOTIFY', url: 'https://open.spotify.com/artist/chazzyboo', desc: 'Verified sound frequency distribution.', category: 'SOUND' },
+    { platform: 'X', url: 'https://x.com/ChazzyBoo780', desc: 'Real-time broadcast updates and signal logs.', category: 'INTEL' },
+  ];
+
+  const wpConnected = !!import.meta.env.VITE_WP_API_URL;
+
+  const googleBio = {
+    description: "Chazzy Boo is a multi-disciplinary artist and producer known for blending high-fashion aesthetics with industrial sonic textures.",
+    aiBio: "Chazzy Boo is a multi-hyphenate creative force based in Western Canada, operating as a Musically Inclined Artist, Producer, DJ, Photographer, & Visual Artist. Operating at the bleeding edge of digital media, Chazzy Boo has carved out a unique space in the contemporary art scene. Known for a distinct 'Broadcast Noir' aesthetic, their work spans high-fashion photography, industrial-leaning electronic music production, and immersive digital experiences that challenge the boundaries of traditional media.\n\nWith a growing footprint in major creative hubs like Vancouver, Victoria, and Edmonton, Chazzy Boo has established a reputation for blending gritty urban textures with high-end visual narratives. Their digital presence, curated under the CBTV (Chazzy Boo TV) banner, serves as a living archive of their multidisciplinary output. This unique creative philosophy treats digital portfolios as immersive media channels, characterized by a signature midnight-onyx palette and a relentless focus on signal-heavy, atmospheric storytelling. Whether through the lens of a camera or the frequencies of a synthesizer, Chazzy Boo invites the audience into a curated world where every signal is intentional and every frame is a narrative. Their work is not just seen or heard; it is experienced as a continuous broadcast of creative evolution."
+  };
+
+  return (
+    <div className="h-full p-4 md:p-24 overflow-y-auto pt-16 md:pt-24">
+      <div className="mb-12 max-w-4xl mx-auto md:mx-0">
+        <div className="text-signal-green text-[10px] md:text-xs tracking-[0.3em] mb-2 uppercase">Intercepted Data</div>
+        <h2 className="text-2xl md:text-5xl font-bold tracking-tighter italic">INTEL LOGS</h2>
+        
+        <div className="mt-6 md:mt-8 p-4 md:p-6 border border-white/10 bg-white/5 space-y-6">
+          <div>
+            <div className="text-[10px] text-signal-green font-bold tracking-widest uppercase mb-2">Identity Profile</div>
+            <p className="text-sm text-white/80 italic">"<DecryptedText text={googleBio.description} />"</p>
+          </div>
+          <div>
+            <p className="text-xs text-white/60 leading-relaxed whitespace-pre-wrap">
+              <DecryptedText text={googleBio.aiBio} />
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-32 md:pb-0 max-w-4xl mx-auto md:mx-0">
+        {signals.map((sig, i) => (
+          <motion.a
+            key={sig.platform}
+            href={sig.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="group p-6 border border-white/10 bg-white/5 hover:border-signal-green transition-all"
+          >
+            <div className="flex justify-between items-start mb-4">
+              <div className="text-[10px] text-signal-green font-bold tracking-widest uppercase">{sig.platform}</div>
+              <div className="text-[8px] text-white/20 font-mono">NODE 0{i+1}</div>
+            </div>
+            <div className="text-xl font-bold tracking-tight mb-2 group-hover:text-signal-green transition-colors">
+              {sig.platform} SIGNAL
+            </div>
+            <p className="text-xs text-white/60 mb-4">{sig.desc}</p>
+            <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-white/40 group-hover:text-white transition-colors">
+              CONNECTING... <ChevronRight size={12} />
+            </div>
+          </motion.a>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const ChannelChat = () => {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [username] = useState(`SIGNAL ${Math.floor(Math.random() * 999)}`);
+
+  useEffect(() => {
+    socket.on("receive_message", (msg: ChatMessage) => {
+      setMessages((prev) => [...prev.slice(-49), msg]);
+    });
+    return () => {
+      socket.off("receive_message");
+    };
+  }, []);
+
+  const sendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    socket.emit("send_message", { user: username, text: input });
+    setInput("");
+  };
+
+  return (
+    <div className="h-full flex flex-col p-4 md:p-24 pt-24 md:pt-24 pb-32 md:pb-24">
+      <div className="mb-8 max-w-2xl mx-auto md:mx-0 w-full">
+        <div className="text-signal-green text-[10px] md:text-xs tracking-[0.3em] mb-2 uppercase">Live Frequency</div>
+        <h2 className="text-3xl md:text-5xl font-bold tracking-tighter italic">CHAT STREAM</h2>
+      </div>
+
+      <div className="flex-1 flex flex-col bg-white/5 border border-white/10 overflow-hidden max-w-2xl w-full mx-auto md:mx-0">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 font-mono text-xs scrollbar-thin scrollbar-thumb-signal-green scrollbar-track-onyx">
+          {messages.map((msg) => (
+            <div key={msg.id} className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <span className="text-signal-green font-bold">[{msg.user}]</span>
+                <span className="text-white/20 text-[8px]">{new Date(msg.timestamp).toLocaleTimeString()}</span>
+              </div>
+              <div className="text-white/80 pl-4 border-l border-white/10 break-words">{msg.text}</div>
+            </div>
+          ))}
+          {messages.length === 0 && (
+            <div className="h-full flex items-center justify-center text-white/20 italic">
+              WAITING FOR SIGNAL...
+            </div>
+          )}
+        </div>
+
+        <form onSubmit={sendMessage} className="p-4 border-t border-white/10 flex gap-2">
+          <input 
+            type="text" 
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="ENTER MESSAGE..."
+            className="flex-1 bg-white/5 border border-white/10 px-4 py-2 text-xs focus:outline-none focus:border-signal-green transition-colors text-white"
+          />
+          <button type="submit" className="bg-signal-green text-onyx px-4 py-2 hover:bg-white transition-colors">
+            <Send size={16} />
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const ChannelBooking = () => {
+  const [status, setStatus] = useState<'IDLE' | 'SENDING' | 'SUCCESS'>('IDLE');
+  const services = [
+    { id: 'photo', label: 'PHOTOGRAPHY', icon: Eye },
+    { id: 'video', label: 'VIDEOGRAPHY', icon: Play },
+    { id: 'dj', label: 'DJ SET', icon: Radio },
+    { id: 'perf', label: 'PERFORMANCE', icon: Activity },
+  ];
+
+  const bookedDates = [
+    { date: 'MAR 12', event: 'PRIVATE SESSION', loc: 'NYC' },
+    { date: 'MAR 18', event: 'SATELLITE GIG', loc: 'LA' },
+    { date: 'MAR 25', event: 'CREATIVE NODE', loc: 'VANCOUVER' },
+    { date: 'MAR 28', event: 'VISUAL ARCHIVE', loc: 'VICTORIA' },
+    { date: 'APR 05', event: 'FASHION WEEK NODE', loc: 'PARIS' },
+    { date: 'APR 12', event: 'STUDIO LOCKDOWN', loc: 'LDN' },
+    { date: 'APR 20', event: 'SONIC EXPEDITION', loc: 'EDMONTON' },
+    { date: 'MAY 02', event: 'SIGNAL BREACH', loc: 'TOKYO' },
+    { date: 'MAY 15', event: 'ONYX SESSIONS', loc: 'BERLIN' },
+    { date: 'JUN 01', event: 'GLOBAL BROADCAST', loc: 'DUBAI' },
+  ];
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus('SENDING');
+    setTimeout(() => setStatus('SUCCESS'), 1500);
+  };
+
+  return (
+    <div className="h-full p-4 md:p-24 overflow-y-auto pt-24 md:pt-24">
+      <div className="mb-12 max-w-4xl mx-auto md:mx-0">
+        <div className="text-signal-green text-[10px] md:text-xs tracking-[0.3em] mb-2 uppercase">Service Requisition</div>
+        <h2 className="text-3xl md:text-5xl font-bold tracking-tighter italic">BOOKING HUB</h2>
+        <p className="text-white/40 text-xs md:text-sm mt-4 max-w-xl">
+          Initiate a formal request for creative services. Select your required frequency node and provide project parameters.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 pb-32 md:pb-0">
+        <div className="space-y-8">
+          <div className="grid grid-cols-2 gap-4">
+            {services.map((service) => (
+              <div 
+                key={service.id}
+                className="p-6 border border-white/10 bg-white/5 flex flex-col items-center gap-4 group hover:border-signal-green transition-all cursor-default"
+              >
+                <service.icon size={24} className="text-white/20 group-hover:text-signal-green transition-colors" />
+                <div className="text-[10px] font-bold tracking-[0.2em]">{service.label}</div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="p-6 border border-signal-green/20 bg-signal-green/5">
+            <div className="flex items-center gap-3 mb-4">
+              <Briefcase size={18} className="text-signal-green" />
+              <div className="text-xs font-bold tracking-widest text-signal-green uppercase">Current Availability</div>
+            </div>
+            <p className="text-xs text-white/60 leading-relaxed">
+              Accepting commissions for Q2 2026. Domestic and international travel nodes active. 
+              Response time: &lt; 24 hours.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="text-[10px] text-white/40 font-bold tracking-widest uppercase flex items-center gap-2">
+              <Calendar size={14} className="text-signal-green" />
+              Transmission Schedule [Booked]
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              {bookedDates.map((item, i) => (
+                <div key={i} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 text-[10px] font-mono">
+                  <div className="flex items-center gap-4">
+                    <span className="text-signal-green">{item.date}</span>
+                    <span className="text-white/60">{item.event}</span>
+                  </div>
+                  <div className="text-white/20">{item.loc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 p-8 relative overflow-hidden">
+          {status === 'SUCCESS' ? (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="h-full flex flex-col items-center justify-center text-center space-y-4"
+            >
+              <div className="w-16 h-16 rounded-full border-2 border-signal-green flex items-center justify-center text-signal-green">
+                <Send size={32} />
+              </div>
+              <h3 className="text-2xl font-bold italic">SIGNAL SENT</h3>
+              <p className="text-xs text-white/40 max-w-[200px]">Your requisition has been encrypted and broadcast to the central hub.</p>
+              <button 
+                onClick={() => setStatus('IDLE')}
+                className="text-[10px] font-bold tracking-widest text-signal-green hover:text-white transition-colors pt-4"
+              >
+                SEND ANOTHER SIGNAL
+              </button>
+            </motion.div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] text-white/40 font-bold tracking-widest uppercase">Identity Name</label>
+                <input required type="text" className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-signal-green transition-colors" placeholder="ENTER NAME..." />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] text-white/40 font-bold tracking-widest uppercase">Contact Frequency</label>
+                <input required type="email" className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-signal-green transition-colors" placeholder="ENTER EMAIL..." />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] text-white/40 font-bold tracking-widest uppercase">Service Node</label>
+                <select className="w-full bg-onyx border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-signal-green transition-colors appearance-none text-white">
+                  <option>PHOTOGRAPHY</option>
+                  <option>VIDEOGRAPHY</option>
+                  <option>DJ SET</option>
+                  <option>PERFORMANCE</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] text-white/40 font-bold tracking-widest uppercase">Project Parameters</label>
+                <textarea rows={4} className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-signal-green transition-colors resize-none" placeholder="DESCRIBE MISSION..."></textarea>
+              </div>
+              
+              <button 
+                disabled={status === 'SENDING'}
+                className="w-full bg-signal-green text-onyx py-4 font-bold tracking-[0.3em] hover:bg-white transition-all disabled:opacity-50"
+              >
+                {status === 'SENDING' ? 'BROADCASTING...' : 'INITIATE REQUISITION'}
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const LiveTicker = () => {
+  const headlines = [
+    "BREAKING: NEW FREQUENCY DETECTED IN SECTOR 092",
+    "CHAZZYBOOTV: SIGNAL STRENGTH OPTIMAL @ 100%",
+    "X_INTEL: @ChazzyBoo780 BROADCASTING LIVE FROM THE UNDISCLOSED STUDIO",
+    "SOUND_UPDATE: NEW INDUSTRIAL TEXTURES ADDED TO THE ARCHIVE",
+    "VISION_LOG: CONTACT SHEET 092-CBTV NOW ACCESSIBLE",
+    "SYSTEM_STATUS: ALL NODES OPERATIONAL // BROADCAST NOIR ACTIVE",
+  ];
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 h-10 md:h-8 bg-black border-t border-white/10 z-50 flex items-center overflow-hidden">
+      <div className="bg-broadcast-red h-full px-4 flex items-center text-[10px] font-black italic tracking-tighter text-white whitespace-nowrap z-10">
+        LIVE INTEL
+      </div>
+      <div className="flex-1 relative h-full flex items-center">
+        <motion.div 
+          animate={{ x: [0, -2000] }}
+          transition={{ repeat: Infinity, duration: 40, ease: "linear" }}
+          className="flex gap-20 whitespace-nowrap"
+        >
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex gap-20">
+              {headlines.map((text, j) => (
+                <div key={j} className="text-[10px] font-mono text-white/40 tracking-widest flex items-center gap-4">
+                  <span className="text-signal-green">●</span> {text}
+                </div>
+              ))}
+            </div>
+          ))}
+        </motion.div>
+      </div>
+      <div className="bg-black h-full px-4 flex items-center text-[10px] font-mono text-white/20 z-10 border-l border-white/10">
+        {new Date().toLocaleTimeString()}
+      </div>
+    </div>
+  );
+};
+
+// --- Main App ---
+
+export default function App() {
+  const [channel, setChannel] = useState<Channel>('LATEST');
+  const [isStarted, setIsStarted] = useState(false);
+  const [isIntro, setIsIntro] = useState(true);
+  const [isChanging, setIsChanging] = useState(false);
+  const [activeChannelNum, setActiveChannelNum] = useState("00");
+  const [isHumActive, setIsHumActive] = useState(false);
+  const [isBreachActive, setIsBreachActive] = useState(false);
+
+  useEffect(() => {
+    const breachInterval = setInterval(() => {
+      if (Math.random() > 0.95) {
+        setIsBreachActive(true);
+        setTimeout(() => setIsBreachActive(false), 800);
+      }
+    }, 10000);
+    return () => clearInterval(breachInterval);
+  }, []);
+  const [feed, setFeed] = useState<FeedItem[]>([]);
+  const [wpPosts, setWpPosts] = useState<WPPost[]>([]);
+
+  useEffect(() => {
+    const fetchFeed = async () => {
+      try {
+        const res = await fetch('/api/live-feed');
+        const data = await res.json();
+        setFeed(data);
+      } catch (e) {
+        console.error("Failed to fetch live feed", e);
+      }
+    };
+
+    const fetchWordPressData = async () => {
+      const posts = await wordpressService.getLatestPosts();
+      setWpPosts(posts);
+    };
+
+    fetchFeed();
+    fetchWordPressData();
+  }, []);
+
+  const handleChannelChange = (newChannel: Channel) => {
+    if (newChannel === channel) return;
+    setIsChanging(true);
+    
+    const channelObj = [
+      { id: 'LATEST', num: '00' },
+      { id: 'SOUND', num: '01' },
+      { id: 'VISION', num: '02' },
+      { id: 'THREADS', num: '03' },
+      { id: 'BOXOFFICE', num: '04' },
+      { id: 'INTEL', num: '05' },
+      { id: 'CHAT', num: '06' },
+      { id: 'BOOKING', num: '07' },
+    ].find(c => c.id === newChannel);
+    
+    if (channelObj) setActiveChannelNum(channelObj.num);
+
+    setTimeout(() => {
+      setChannel(newChannel);
+      setIsChanging(false);
+    }, 800);
+  };
+
+  return (
+    <div className={`relative w-screen h-screen bg-onyx overflow-hidden selection:bg-signal-green selection:text-onyx ${isBreachActive ? 'signal-breach' : ''}`}>
+      <CustomCursor />
+      <SignalHUD />
+      <AnimatePresence mode="wait">
+        {!isStarted && (
+          <motion.div 
+            key="start"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200]"
+          >
+            <StartScreen onStart={() => setIsStarted(true)} />
+          </motion.div>
+        )}
+        {isStarted && isIntro && (
+          <motion.div 
+            key="intro"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100]"
+          >
+            <GlitchIntro onComplete={() => setIsIntro(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isStarted && !isIntro && channel !== 'INTEL' && channel !== 'BOOKING' && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="rgb-static-container"
+          >
+            <div className="rgb-layer rgb-layer-r" />
+            <div className="rgb-layer rgb-layer-g" />
+            <div className="rgb-layer rgb-layer-b" />
+            <div className="glitch-scanline opacity-20" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      <CRTOverlay />
+      <OnAirSign active={isStarted && !isIntro} />
+      <CornerBug />
+      <LiveTicker />
+      
+      {isStarted && !isIntro && (
+        <>
+          <RemoteControl currentChannel={channel} setChannel={handleChannelChange} />
+          
+          <main className="w-full h-full md:pl-32">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={channel}
+                initial={{ opacity: 0, x: 20, filter: 'blur(10px)' }}
+                animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, x: -20, filter: 'blur(10px)' }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+                className="w-full h-full"
+              >
+                {channel === 'LATEST' && <ChannelLatest feed={feed} />}
+                {channel === 'SOUND' && <ChannelSound />}
+                {channel === 'VISION' && <ChannelVision />}
+                {channel === 'THREADS' && <ChannelThreads />}
+                {channel === 'BOXOFFICE' && <BoxOffice />}
+                {channel === 'INTEL' && <ChannelIntel />}
+                {channel === 'CHAT' && <ChannelChat />}
+                {channel === 'BOOKING' && <ChannelBooking />}
+              </motion.div>
+            </AnimatePresence>
+          </main>
+
+          {/* Channel Switch Glitch Overlay */}
+          <AnimatePresence>
+            {isChanging && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[60] bg-black pointer-events-none"
+              >
+                <div className="absolute inset-0 intense-static opacity-60" />
+                <div className="absolute inset-0 flex flex-col justify-center items-center">
+                  <div className="w-full h-[2px] bg-signal-green/50 animate-pulse" />
+                  <div className="relative">
+                    <div className="text-[15vw] font-black text-white italic chromatic-aberration leading-none">
+                      CH {activeChannelNum}
+                    </div>
+                    <div className="absolute -top-4 -right-4 text-signal-green text-xs font-mono animate-ping">
+                      SIGNAL_ACQUIRED
+                    </div>
+                  </div>
+                  <div className="w-full h-[2px] bg-signal-green/50 animate-pulse" />
+                  <div className="mt-4 text-[10px] text-white/40 font-mono tracking-[1em] uppercase">
+                    Frequency Shift In Progress...
+                  </div>
+                </div>
+                {/* RGB Split Glitch Bars */}
+                <div className="absolute top-1/4 left-0 w-full h-20 bg-red-500/10 mix-blend-screen animate-pulse" style={{ animationDelay: '0.1s' }} />
+                <div className="absolute top-1/2 left-0 w-full h-10 bg-blue-500/10 mix-blend-screen animate-pulse" style={{ animationDelay: '0.2s' }} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Ambient Hum Audio */}
+          <audio 
+            autoPlay 
+            loop 
+            muted={!isHumActive}
+            src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" 
+            ref={(el) => {
+              if (el) {
+                el.volume = 0.15;
+                if (isHumActive) el.play().catch(() => {});
+              }
+            }}
+          />
+
+          {/* Hum Toggle Control */}
+          <div className="fixed bottom-24 md:bottom-12 left-6 z-50 flex items-center gap-3">
+            <button 
+              onClick={() => setIsHumActive(!isHumActive)}
+              className={`w-8 h-8 md:w-10 md:h-10 rounded-full border flex items-center justify-center transition-all ${isHumActive ? 'bg-signal-green border-signal-green text-onyx shadow-[0_0_15px_rgba(0,255,65,0.5)]' : 'bg-black/40 border-white/20 text-white/40 hover:border-white/60'}`}
+              title="Toggle Ambient Hum"
+            >
+              <Radio size={14} className={isHumActive ? 'animate-pulse' : ''} />
+            </button>
+            <div className="hidden md:block">
+              <div className="text-[8px] text-white/20 font-mono uppercase tracking-widest">Ambient Hum</div>
+              <div className={`text-[10px] font-bold font-mono uppercase ${isHumActive ? 'text-signal-green' : 'text-white/20'}`}>
+                {isHumActive ? 'Active' : 'Offline'}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
