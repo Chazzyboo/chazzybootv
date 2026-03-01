@@ -1,0 +1,12 @@
+node_modules/
+dist/
+build/
+.git/
+.github/
+.vscode/
+cbtv-theme/
+cbtv-theme.zip
+wordpress_import.xml
+*.log
+.env*
+!.env.example

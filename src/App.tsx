@@ -678,17 +678,39 @@ const ChannelLatest = ({ feed }: { feed: FeedItem[] }) => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 items-start pb-32 md:pb-0">
           <div className="lg:col-span-2 relative aspect-video bg-white/5 border border-white/10 overflow-hidden group">
             <AnimatePresence mode="wait">
-              <motion.img
-                key={latest.id}
-                initial={{ opacity: 0, scale: 1.1 }}
-                animate={{ opacity: 0.8, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.8 }}
-                src={latest.thumbnail}
-                alt={latest.title}
-                className="w-full h-full object-cover group-hover:opacity-100"
-                referrerPolicy="no-referrer"
-              />
+              {latest.type === 'YOUTUBE' ? (
+                <motion.div
+                  key={latest.id}
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.8 }}
+                  className="w-full h-full"
+                >
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    src={`https://www.youtube.com/embed/${latest.id}?autoplay=1&mute=1`}
+                    title={latest.title}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full"
+                  ></iframe>
+                </motion.div>
+              ) : (
+                <motion.img
+                  key={latest.id}
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 0.8, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.8 }}
+                  src={latest.thumbnail}
+                  alt={latest.title}
+                  className="w-full h-full object-cover group-hover:opacity-100"
+                  referrerPolicy="no-referrer"
+                />
+              )}
             </AnimatePresence>
             <div className="absolute inset-0 bg-gradient-to-t from-onyx via-transparent to-transparent opacity-60" />
             <div className="absolute top-3 right-3 md:top-4 md:right-4 bg-black/80 px-2 py-0.5 md:px-3 md:py-1 border border-white/20 text-[8px] md:text-[10px] font-bold tracking-widest uppercase">
@@ -1022,12 +1044,14 @@ const ChannelBooking = () => {
 
 const LiveTicker = () => {
   const headlines = [
-    "BREAKING: NEW FREQUENCY DETECTED IN SECTOR 092",
-    "CHAZZYBOOTV: SIGNAL STRENGTH OPTIMAL @ 100%",
-    "X_INTEL: @ChazzyBoo780 BROADCASTING LIVE FROM THE UNDISCLOSED STUDIO",
-    "SOUND_UPDATE: NEW INDUSTRIAL TEXTURES ADDED TO THE ARCHIVE",
-    "VISION_LOG: CONTACT SHEET 092-CBTV NOW ACCESSIBLE",
-    "SYSTEM_STATUS: ALL NODES OPERATIONAL // BROADCAST NOIR ACTIVE",
+    "VISION_NODE_01: INSTAGRAM // @CHAZZY.BOO",
+    "VISION_NODE_02: YOUTUBE // @CHAZZYBOOTV",
+    "INTEL_NODE_01: X // @CHAZZYBOO780",
+    "SOUND_NODE_01: SPOTIFY // CHAZZY BOO",
+    "SOUND_NODE_02: APPLE MUSIC // CHAZZY BOO",
+    "SOUND_NODE_03: SOUNDCLOUD // CHAZZYBOO",
+    "ACCESS_NODE_01: EVENTBRITE // CHAZZYBOO.EVENTBRITE.COM",
+    "SYSTEM_STATUS: ALL SOCIAL NODES OPERATIONAL // BROADCAST NOIR ACTIVE",
   ];
 
   return (
