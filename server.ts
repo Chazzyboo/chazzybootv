@@ -3,7 +3,7 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createServer } from "http";
-import { Server } from "socket.io";
+
 import dotenv from "dotenv";
 
 dotenv.config({ path: ".env.local" });
@@ -15,27 +15,8 @@ const __dirname = path.dirname(__filename);
 async function startServer() {
   const app = express();
   const httpServer = createServer(app);
-  const io = new Server(httpServer);
   const PORT = 3000;
 
-  // Socket.io Logic
-  io.on("connection", (socket) => {
-    console.log("A user connected:", socket.id);
-
-    socket.on("send_message", (data) => {
-      // Broadcast to all clients including sender
-      io.emit("receive_message", {
-        id: Math.random().toString(36).substr(2, 9),
-        user: data.user || "ANON_SIGNAL",
-        text: data.text,
-        timestamp: new Date().toISOString()
-      });
-    });
-
-    socket.on("disconnect", () => {
-      console.log("User disconnected");
-    });
-  });
 
   // API Routes
   app.get("/api/live-feed", async (req, res) => {

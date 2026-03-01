@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { io } from 'socket.io-client';
+import Pusher from 'pusher-js';
 import emailjs from '@emailjs/browser';
 import { wordpressService, WPPost } from './services/wordpressService';
 import {
@@ -25,7 +25,13 @@ import {
   Briefcase
 } from 'lucide-react';
 
-const socket = io();
+// --- Pusher Setup ---
+let pusherClient: Pusher | null = null;
+if (import.meta.env.VITE_PUSHER_KEY && import.meta.env.VITE_PUSHER_CLUSTER) {
+  pusherClient = new Pusher(import.meta.env.VITE_PUSHER_KEY, {
+    cluster: import.meta.env.VITE_PUSHER_CLUSTER,
+  });
+}
 
 // --- Constants ---
 const PROFILE_PHOTO = "https://picsum.photos/seed/chazzyboo_profile/800/800";
@@ -841,19 +847,35 @@ const ChannelChat = () => {
   const [username] = useState(`SIGNAL ${Math.floor(Math.random() * 999)}`);
 
   useEffect(() => {
-    socket.on("receive_message", (msg: ChatMessage) => {
+    if (!pusherClient) return;
+
+    const channel = pusherClient.subscribe('chat-room');
+    channel.bind('message', (msg: ChatMessage) => {
       setMessages((prev) => [...prev.slice(-49), msg]);
     });
+
     return () => {
-      socket.off("receive_message");
+      channel.unbind_all();
+      channel.unsubscribe();
     };
   }, []);
 
-  const sendMessage = (e: React.FormEvent) => {
+  const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
-    socket.emit("send_message", { user: username, text: input });
+
+    const text = input;
     setInput("");
+
+    try {
+      await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user: username, text }),
+      });
+    } catch (error) {
+      console.error("Failed to send message", error);
+    }
   };
 
   return (
