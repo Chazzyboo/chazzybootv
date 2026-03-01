@@ -52,7 +52,7 @@ async function startServer() {
       if (youtubeKey && youtubeChannelId) {
         try {
           const ytRes = await fetch(
-            `https://www.googleapis.com/youtube/v3/search?key=${youtubeKey}&channelId=${youtubeChannelId}&part=snippet,id&order=date&maxResults=5&type=video`
+            `https://www.googleapis.com/youtube/v3/search?key=${youtubeKey}&channelId=${youtubeChannelId}&part=snippet,id&order=date&maxResults=12&type=video`
           );
           const ytData = await ytRes.json();
           if (ytData.items) {
@@ -101,24 +101,47 @@ async function startServer() {
 
       // If no keys provided, return mock data for demo purposes
       if (feedItems.length === 0) {
-        feedItems = [
-          {
-            id: 'mock1',
-            type: 'YOUTUBE',
-            title: 'LATEST_MUSIC_VIDEO: SATELLITE_DREAM',
-            thumbnail: 'https://picsum.photos/seed/yt/1280/720',
-            publishedAt: new Date().toISOString(),
-            url: '#'
-          },
-          {
-            id: 'mock2',
-            type: 'INSTAGRAM',
-            title: 'STUDIO_VIBES: MIDNIGHT_ONYX',
-            thumbnail: 'https://picsum.photos/seed/ig/1080/1080',
-            publishedAt: new Date(Date.now() - 3600000).toISOString(),
-            url: '#'
-          }
+        const mockVideos = [
+          { id: 'x6ZOmTS_AxE', title: 'CHAZZY BOO - BOOL\'N (OFFICIAL MUSIC VIDEO)' },
+          { id: 'dQw4w9WgXcQ', title: 'CHAZZY BOO - LATE NIGHT STUDIO SESSIONS' },
+          { id: 'x6ZOmTS_AxE', title: 'CHAZZY BOO - ONYX VIBES (LIVE SET)' },
+          { id: 'dQw4w9WgXcQ', title: 'CHAZZY BOO - SATELLITE DREAM' },
+          { id: 'x6ZOmTS_AxE', title: 'CHAZZY BOO - BEHIND THE SCENES: BOOL\'N' },
+          { id: 'dQw4w9WgXcQ', title: 'CHAZZY BOO - INDUSTRIAL TEXTURES VOL. 1' },
+          { id: 'x6ZOmTS_AxE', title: 'CHAZZY BOO - TRANSMISSION 01 REHEARSAL' },
+          { id: 'dQw4w9WgXcQ', title: 'CHAZZY BOO - MIDNIGHT FREQUENCIES' },
+          { id: 'x6ZOmTS_AxE', title: 'CHAZZY BOO - UNRELEASED TRACK TEASER' },
+          { id: 'dQw4w9WgXcQ', title: 'CHAZZY BOO - FASHION WEEK HIGHLIGHTS' }
         ];
+
+        feedItems = mockVideos.map((video, index) => ({
+          id: video.id + index,
+          type: 'YOUTUBE',
+          title: video.title,
+          thumbnail: `https://img.youtube.com/vi/${video.id}/maxresdefault.jpg`,
+          publishedAt: new Date(Date.now() - index * 86400000).toISOString(),
+          url: `https://www.youtube.com/watch?v=${video.id}`
+        }));
+
+        feedItems.push({
+          id: 'mock-ig-1',
+          type: 'INSTAGRAM',
+          title: 'STUDIO_VIBES: MIDNIGHT_ONYX',
+          thumbnail: 'https://picsum.photos/seed/ig/1080/1080',
+          publishedAt: new Date(Date.now() - 3600000).toISOString(),
+          url: 'https://instagram.com/chazzyboo.jpeg'
+        });
+        feedItems.push({
+          id: 'mock-ig-2',
+          type: 'INSTAGRAM',
+          title: 'NEW_MERCH: BROADCAST_NOIR_SERIES',
+          thumbnail: 'https://picsum.photos/seed/ig2/1080/1080',
+          publishedAt: new Date(Date.now() - 7200000).toISOString(),
+          url: 'https://instagram.com/chazzyboo.jpeg'
+        });
+
+        // Sort by date descending
+        feedItems.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
       }
 
       res.json(feedItems);

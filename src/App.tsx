@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { io } from 'socket.io-client';
+import emailjs from '@emailjs/browser';
 import { wordpressService, WPPost } from './services/wordpressService';
 import {
   Radio,
@@ -14,6 +15,7 @@ import {
   Pause,
   ChevronRight,
   ChevronLeft,
+  ChevronDown,
   Power,
   Instagram,
   Mail,
@@ -419,6 +421,14 @@ const RemoteControl = ({ currentChannel, setChannel }: { currentChannel: Channel
 
 const ChannelSound = () => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const iframeRef = React.useRef<HTMLIFrameElement>(null);
+
+  const togglePlay = () => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({ command: 'toggle' }, '*');
+    }
+    setIsPlaying(!isPlaying);
+  };
 
   return (
     <div className="h-full flex flex-col items-center justify-center p-4 md:p-20 overflow-y-auto">
@@ -434,7 +444,7 @@ const ChannelSound = () => {
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              onClick={() => setIsPlaying(!isPlaying)}
+              onClick={togglePlay}
               className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-signal-green text-onyx flex items-center justify-center shadow-2xl"
             >
               {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} className="ml-1" fill="currentColor" />}
@@ -465,6 +475,7 @@ const ChannelSound = () => {
 
           <div className="w-full h-[352px] rounded-xl overflow-hidden shadow-2xl">
             <iframe
+              ref={iframeRef}
               src="https://open.spotify.com/embed/artist/0bFrhCc82qmydNx8NCRY9e?utm_source=generator&theme=0"
               width="100%"
               height="100%"
@@ -588,7 +599,7 @@ const BoxOffice = () => {
   const events = [
     { id: 1, title: 'VIBE SERIES', date: 'MAR 19', time: '19:00', status: 'PHYSICAL EVENT', price: 'TICKETS', url: 'https://www.eventbrite.ca/e/vibe-series-tickets-1982595902715' },
     { id: 2, title: 'TRANSMISSION 02', date: 'TBA', time: '--:--', status: 'LIVE BROADCAST', price: '-' },
-    { id: 3, title: 'ONYX SESSIONS', date: 'TBA', time: '--:--', status: 'PRIVATE FEED', price: '-' },
+    { id: 3, title: 'TRANSMISSION 03', date: 'TBA', time: '--:--', status: 'PRIVATE FEED', price: '-' },
   ];
 
   return (
@@ -654,7 +665,7 @@ const BoxOffice = () => {
 const ChannelLatest = ({ feed }: { feed: FeedItem[] }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isManual, setIsManual] = useState(false);
-  const displayFeed = feed.slice(0, 5);
+  const displayFeed = feed.slice(0, 12);
   const latest = displayFeed[currentIndex];
 
   useEffect(() => {
@@ -668,49 +679,27 @@ const ChannelLatest = ({ feed }: { feed: FeedItem[] }) => {
   if (!latest) return <div className="h-full flex items-center justify-center text-white/20">NO SIGNAL DETECTED</div>;
 
   return (
-    <div className="h-full flex flex-col items-center justify-center p-4 md:p-20 overflow-y-auto">
-      <div className="w-full max-w-5xl pt-24 md:pt-0">
+    <div className="h-full flex flex-col items-center justify-center p-4 md:p-20 overflow-y-auto w-full">
+      <div className="w-full max-w-5xl pt-24 md:pt-0 pb-32 md:pb-8">
         <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
           <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-broadcast-red animate-pulse" />
           <div className="text-broadcast-red text-[10px] md:text-xs tracking-[0.4em] md:tracking-[0.5em] font-bold uppercase">Breaking Transmission</div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 items-start pb-32 md:pb-0">
-          <div className="lg:col-span-2 relative aspect-video bg-white/5 border border-white/10 overflow-hidden group">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 items-start">
+          <div className="lg:col-span-2 relative aspect-[16/9] bg-white/5 border border-white/10 overflow-hidden group">
             <AnimatePresence mode="wait">
-              {latest.type === 'YOUTUBE' ? (
-                <motion.div
-                  key={latest.id}
-                  initial={{ opacity: 0, scale: 1.1 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.8 }}
-                  className="w-full h-full"
-                >
-                  <iframe
-                    width="100%"
-                    height="100%"
-                    src={`https://www.youtube.com/embed/${latest.id}?autoplay=1&mute=1`}
-                    title={latest.title}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="w-full h-full"
-                  ></iframe>
-                </motion.div>
-              ) : (
-                <motion.img
-                  key={latest.id}
-                  initial={{ opacity: 0, scale: 1.1 }}
-                  animate={{ opacity: 0.8, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.8 }}
-                  src={latest.thumbnail}
-                  alt={latest.title}
-                  className="w-full h-full object-cover group-hover:opacity-100"
-                  referrerPolicy="no-referrer"
-                />
-              )}
+              <motion.img
+                key={latest.id}
+                initial={{ opacity: 0, scale: 1.1 }}
+                animate={{ opacity: 0.8, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.8 }}
+                src={latest.thumbnail}
+                alt={latest.title}
+                className="w-full h-full object-cover group-hover:opacity-100"
+                referrerPolicy="no-referrer"
+              />
             </AnimatePresence>
             <div className="absolute inset-0 bg-gradient-to-t from-onyx via-transparent to-transparent opacity-60" />
             <div className="absolute top-3 right-3 md:top-4 md:right-4 bg-black/80 px-2 py-0.5 md:px-3 md:py-1 border border-white/20 text-[8px] md:text-[10px] font-bold tracking-widest uppercase">
@@ -729,7 +718,7 @@ const ChannelLatest = ({ feed }: { feed: FeedItem[] }) => {
             </a>
           </div>
 
-          <div className="space-y-6 md:space-y-8">
+          <div className="space-y-6 md:space-y-8 h-full flex flex-col">
             <AnimatePresence mode="wait">
               <motion.div
                 key={latest.id}
@@ -745,29 +734,31 @@ const ChannelLatest = ({ feed }: { feed: FeedItem[] }) => {
               </motion.div>
             </AnimatePresence>
 
-            <div className="space-y-3 md:space-y-4 pt-6 md:pt-8 border-t border-white/10">
-              <div className="text-[9px] md:text-[10px] text-signal-green tracking-widest uppercase mb-2 md:mb-4 flex justify-between items-center">
+            <div className="space-y-3 md:space-y-4 pt-4 md:pt-6 border-t border-white/10 flex-1 flex flex-col min-h-0">
+              <div className="text-[9px] md:text-[10px] text-signal-green tracking-widest uppercase flex justify-between items-center shrink-0">
                 <span>Recent Signals</span>
                 {!isManual && <span className="text-[8px] text-white/20 animate-pulse">AUTO_CYCLE_ACTIVE</span>}
               </div>
-              {displayFeed.map((item, idx) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setCurrentIndex(idx);
-                    setIsManual(true);
-                  }}
-                  className={`w-full flex items-center gap-3 md:gap-4 group cursor-pointer text-left transition-all ${currentIndex === idx ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
-                >
-                  <div className={`w-12 md:w-16 aspect-video bg-white/10 overflow-hidden border ${currentIndex === idx ? 'border-signal-green' : 'border-white/10'}`}>
-                    <img src={item.thumbnail} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[8px] md:text-[9px] uppercase tracking-widest">{item.type}</div>
-                    <div className={`text-[10px] md:text-xs font-bold truncate ${currentIndex === idx ? 'text-signal-green' : 'group-hover:text-signal-green'} transition-colors`}>{item.title}</div>
-                  </div>
-                </button>
-              ))}
+              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 md:space-y-4 max-h-[350px]">
+                {displayFeed.map((item, idx) => (
+                  <button
+                    key={item.id + idx.toString()}
+                    onClick={() => {
+                      setCurrentIndex(idx);
+                      setIsManual(true);
+                    }}
+                    className={`w-full flex items-center gap-3 md:gap-4 group cursor-pointer text-left transition-all ${currentIndex === idx ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
+                  >
+                    <div className={`w-12 md:w-16 aspect-video shrink-0 bg-white/10 overflow-hidden border ${currentIndex === idx ? 'border-signal-green' : 'border-white/10'}`}>
+                      <img src={item.thumbnail} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[8px] md:text-[9px] uppercase tracking-widest">{item.type}</div>
+                      <div className={`text-[10px] md:text-xs font-bold truncate ${currentIndex === idx ? 'text-signal-green' : 'group-hover:text-signal-green'} transition-colors`}>{item.title}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -909,6 +900,8 @@ const ChannelChat = () => {
 
 const ChannelBooking = () => {
   const [status, setStatus] = useState<'IDLE' | 'SENDING' | 'SUCCESS'>('IDLE');
+  const [selectedService, setSelectedService] = useState('photo');
+
   const services = [
     { id: 'photo', label: 'PHOTOGRAPHY', icon: Eye },
     { id: 'video', label: 'VIDEOGRAPHY', icon: Play },
@@ -920,10 +913,42 @@ const ChannelBooking = () => {
     { date: 'MAR 19', event: 'VIBE SERIES', loc: 'VANCOUVER', url: 'https://www.eventbrite.ca/e/vibe-series-tickets-1982595902715' },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    details: ''
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (status === 'SENDING') return;
+
     setStatus('SENDING');
-    setTimeout(() => setStatus('SUCCESS'), 1500);
+
+    try {
+      const templateParams = {
+        name: formData.name,
+        email: formData.email,
+        service: services.find(s => s.id === selectedService)?.label || selectedService,
+        project_details: formData.details
+      };
+
+      await emailjs.send(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        templateParams,
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+      );
+
+      setStatus('SUCCESS');
+      setFormData({ name: '', email: '', details: '' }); // Clear form
+      setTimeout(() => setStatus('IDLE'), 3000);
+    } catch (error: any) {
+      console.error('FAILED...', error);
+      setStatus('IDLE');
+      const errorMsg = error?.text || error?.message || JSON.stringify(error) || "Unknown error";
+      alert(`EmailJS Error:\n\n${errorMsg}\n\nPlease check your Service ID, Template ID, and Public Key.`);
+    }
   };
 
   return (
@@ -940,13 +965,14 @@ const ChannelBooking = () => {
         <div className="space-y-8">
           <div className="grid grid-cols-2 gap-4">
             {services.map((service) => (
-              <div
+              <button
                 key={service.id}
-                className="p-6 border border-white/10 bg-white/5 flex flex-col items-center gap-4 group hover:border-signal-green transition-all cursor-default"
+                onClick={() => setSelectedService(service.id)}
+                className={`p-6 border bg-white/5 flex flex-col items-center gap-4 group transition-all text-left w-full h-full ${selectedService === service.id ? 'border-signal-green text-signal-green shadow-[0_0_15px_rgba(0,255,65,0.2)]' : 'border-white/10 text-white/20 hover:border-signal-green/50 hover:text-signal-green/80'}`}
               >
-                <service.icon size={24} className="text-white/20 group-hover:text-signal-green transition-colors" />
+                <service.icon size={24} className="transition-colors" />
                 <div className="text-[10px] font-bold tracking-[0.2em]">{service.label}</div>
-              </div>
+              </button>
             ))}
           </div>
 
@@ -1005,73 +1031,84 @@ const ChannelBooking = () => {
           </div>
         </div>
 
-        <div className="bg-white/5 border border-white/10 p-4 md:p-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-signal-green/5 rounded-full blur-3xl" />
-
-          <div className="mb-8">
+        <div className="bg-white/5 border border-white/10 p-0 relative overflow-hidden flex flex-col min-h-[500px]">
+          <div className="p-4 md:p-8 border-b border-white/10 bg-black/40">
             <h3 className="text-xl font-bold tracking-tighter italic flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-signal-green animate-pulse" />
-              DIRECT FEED
+              SERVICE CONFIGURATION
             </h3>
-
-            <a
-              href="https://chazzyboo.eventbrite.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-6 w-full py-4 bg-onyx border border-white/20 hover:border-signal-green hover:text-signal-green transition-all text-xs font-bold tracking-widest uppercase flex items-center justify-center gap-2 group"
-            >
-              <Ticket size={16} className="text-white/40 group-hover:text-signal-green transition-colors" />
-              SECURE EVENT TICKETS
-            </a>
+            <p className="text-[10px] text-white/40 font-mono mt-2">SELECT PARAMETERS</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-[8px] font-mono text-white/40 uppercase tracking-widest">Client Identifier</label>
+          <div className="flex-1 w-full bg-black/60 p-6 md:p-8 flex flex-col">
+            <form onSubmit={handleSubmit} className="space-y-6 flex-1 flex flex-col">
+              <div className="space-y-4">
+                <label className="text-[10px] text-signal-green tracking-widest uppercase font-bold">Selected Service</label>
+                <div className="relative">
+                  <select
+                    value={selectedService}
+                    onChange={(e) => setSelectedService(e.target.value)}
+                    className="w-full bg-onyx border border-white/20 p-4 text-xs tracking-widest uppercase appearance-none hover:border-signal-green focus:border-signal-green focus:outline-none transition-colors cursor-pointer"
+                  >
+                    {services.map(s => (
+                      <option key={s.id} value={s.id}>{s.label}</option>
+                    ))}
+                  </select>
+                  <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <label className="text-[10px] text-signal-green tracking-widest uppercase font-bold">Client Designation</label>
                 <input
                   type="text"
                   required
-                  className="w-full bg-black/50 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-signal-green transition-colors disabled:opacity-50"
-                  disabled={status !== 'IDLE'}
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="NAME / ALIAS"
+                  className="w-full bg-onyx border border-white/20 p-4 text-xs tracking-widest uppercase focus:border-signal-green focus:outline-none transition-colors"
                 />
               </div>
-              <div className="space-y-1">
-                <label className="text-[8px] font-mono text-white/40 uppercase tracking-widest">Return Signal (Email)</label>
+
+              <div className="space-y-4">
+                <label className="text-[10px] text-signal-green tracking-widest uppercase font-bold">Comms Link</label>
                 <input
                   type="email"
                   required
-                  className="w-full bg-black/50 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-signal-green transition-colors disabled:opacity-50"
-                  disabled={status !== 'IDLE'}
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="EMAIL ADDRESS"
+                  className="w-full bg-onyx border border-white/20 p-4 text-xs tracking-widest uppercase focus:border-signal-green focus:outline-none transition-colors"
                 />
               </div>
-            </div>
 
-            <div className="space-y-1">
-              <label className="text-[8px] font-mono text-white/40 uppercase tracking-widest">Transmission Payload</label>
-              <textarea
-                required
-                rows={4}
-                className="w-full bg-black/50 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-signal-green transition-colors resize-none disabled:opacity-50"
+              <div className="space-y-4 flex-1">
+                <label className="text-[10px] text-signal-green tracking-widest uppercase font-bold">Project Details</label>
+                <textarea
+                  required
+                  value={formData.details}
+                  onChange={(e) => setFormData(prev => ({ ...prev, details: e.target.value }))}
+                  placeholder="DESCRIBE THE TRANSMISSION REQUIREMENT..."
+                  className="w-full h-full min-h-[120px] bg-onyx border border-white/20 p-4 text-xs tracking-widest uppercase focus:border-signal-green focus:outline-none transition-colors resize-none"
+                />
+              </div>
+
+              <button
+                type="submit"
                 disabled={status !== 'IDLE'}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={status !== 'IDLE'}
-              className={`w-full py-4 text-xs font-bold tracking-[0.2em] transition-all flex items-center justify-center gap-2 ${status === 'IDLE'
-                  ? 'bg-signal-green text-onyx hover:bg-white'
-                  : status === 'SENDING'
-                    ? 'bg-white/10 text-white cursor-wait'
-                    : 'bg-onyx border border-signal-green text-signal-green'
-                }`}
-            >
-              {status === 'IDLE' && <><MessageSquare size={14} /> INITIALIZE UPLOAD</>}
-              {status === 'SENDING' && <span className="animate-pulse">ENCRYPTING INQUIRY...</span>}
-              {status === 'SUCCESS' && 'SIGNAL TRANSMITTED'}
-            </button>
-          </form>
+                className="w-full p-4 border-2 border-signal-green text-signal-green font-bold tracking-[0.2em] text-xs hover:bg-signal-green hover:text-onyx transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 group"
+              >
+                {status === 'IDLE' && (
+                  <>
+                    <span>INITIATE REQUEST</span>
+                    <Send size={14} className="group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+                {status === 'SENDING' && <span className="animate-pulse">TRANSMITTING...</span>}
+                {status === 'SUCCESS' && <span>REQUEST RECEIVED</span>}
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </div>
@@ -1080,14 +1117,12 @@ const ChannelBooking = () => {
 
 const LiveTicker = () => {
   const headlines = [
-    "VISION_NODE_01: INSTAGRAM // @CHAZZY.BOO",
-    "VISION_NODE_02: YOUTUBE // @CHAZZYBOOTV",
-    "INTEL_NODE_01: X // @CHAZZYBOO780",
-    "SOUND_NODE_01: SPOTIFY // CHAZZY BOO",
-    "SOUND_NODE_02: APPLE MUSIC // CHAZZY BOO",
-    "SOUND_NODE_03: SOUNDCLOUD // CHAZZYBOO",
-    "ACCESS_NODE_01: EVENTBRITE // CHAZZYBOO.EVENTBRITE.COM",
-    "SYSTEM_STATUS: ALL SOCIAL NODES OPERATIONAL // BROADCAST NOIR ACTIVE",
+    "BREAKING: NEW FREQUENCY DETECTED IN SECTOR 092",
+    "CHAZZYBOOTV: SIGNAL STRENGTH OPTIMAL @ 100%",
+    "X_INTEL: @ChazzyBoo780 BROADCASTING LIVE FROM THE UNDISCLOSED STUDIO",
+    "SOUND_UPDATE: NEW INDUSTRIAL TEXTURES ADDED TO THE ARCHIVE",
+    "VISION_LOG: CONTACT SHEET 092-CBTV NOW ACCESSIBLE",
+    "SYSTEM_STATUS: ALL NODES OPERATIONAL // BROADCAST NOIR ACTIVE",
   ];
 
   return (
@@ -1293,33 +1328,44 @@ export default function App() {
             )}
           </AnimatePresence>
 
-          {/* Ambient Hum Audio */}
-          <audio
-            autoPlay
-            loop
-            muted={!isHumActive}
-            src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"
-            ref={(el) => {
-              if (el) {
-                el.volume = 0.15;
-                if (isHumActive) el.play().catch(() => { });
-              }
-            }}
-          />
+          {/* Spotify Stream Audio Widget */}
+          <AnimatePresence>
+            {isHumActive && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 50 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 50 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                className="fixed bottom-24 md:bottom-28 left-6 md:left-24 z-50 w-72 md:w-80 shadow-2xl rounded-xl overflow-hidden border border-white/10"
+              >
+                <iframe
+                  title="Spotify Background Player"
+                  src="https://open.spotify.com/embed/artist/0bFrhCc82qmydNx8NCRY9e?utm_source=generator&theme=0"
+                  width="100%"
+                  height="152"
+                  frameBorder="0"
+                  allowFullScreen
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                  className="bg-black"
+                ></iframe>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Hum Toggle Control */}
           <div className="fixed bottom-24 md:bottom-12 left-6 z-50 flex items-center gap-3">
             <button
               onClick={() => setIsHumActive(!isHumActive)}
               className={`w-8 h-8 md:w-10 md:h-10 rounded-full border flex items-center justify-center transition-all ${isHumActive ? 'bg-signal-green border-signal-green text-onyx shadow-[0_0_15px_rgba(0,255,65,0.5)]' : 'bg-black/40 border-white/20 text-white/40 hover:border-white/60'}`}
-              title="Toggle Ambient Hum"
+              title="Toggle Spotify Stream"
             >
               <Radio size={14} className={isHumActive ? 'animate-pulse' : ''} />
             </button>
             <div className="hidden md:block">
-              <div className="text-[8px] text-white/20 font-mono uppercase tracking-widest">Ambient Hum</div>
+              <div className="text-[8px] text-white/20 font-mono uppercase tracking-widest">Spotify Radio</div>
               <div className={`text-[10px] font-bold font-mono uppercase ${isHumActive ? 'text-signal-green' : 'text-white/20'}`}>
-                {isHumActive ? 'Active' : 'Offline'}
+                {isHumActive ? 'ONLINE' : 'Offline'}
               </div>
             </div>
           </div>
