@@ -1105,7 +1105,7 @@ const ChannelBooking = () => {
                   </>
                 )}
                 {status === 'SENDING' && <span className="animate-pulse">TRANSMITTING...</span>}
-                {status === 'SUCCESS' && <span>REQUEST RECEIVED</span>}
+                {status === 'SUCCESS' && <span>THANKS FOR REACHING OUT!</span>}
               </button>
             </form>
           </div>
