@@ -1005,37 +1005,73 @@ const ChannelBooking = () => {
           </div>
         </div>
 
-        <div className="bg-white/5 border border-white/10 p-0 relative overflow-hidden flex flex-col min-h-[500px]">
-          <div className="p-4 md:p-8 border-b border-white/10 bg-black/40">
+        <div className="bg-white/5 border border-white/10 p-4 md:p-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-signal-green/5 rounded-full blur-3xl" />
+
+          <div className="mb-8">
             <h3 className="text-xl font-bold tracking-tighter italic flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-signal-green animate-pulse" />
-              TICKET AUTHORIZATION
+              DIRECT FEED
             </h3>
-            <p className="text-[10px] text-white/40 font-mono mt-2">SECURE ENCRYPTION NODE ACTIVE</p>
+
+            <a
+              href="https://chazzyboo.eventbrite.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 w-full py-4 bg-onyx border border-white/20 hover:border-signal-green hover:text-signal-green transition-all text-xs font-bold tracking-widest uppercase flex items-center justify-center gap-2 group"
+            >
+              <Ticket size={16} className="text-white/40 group-hover:text-signal-green transition-colors" />
+              SECURE EVENT TICKETS
+            </a>
           </div>
 
-          <div className="flex-1 w-full bg-black relative">
-            {/* Eventbrite Embed */}
-            <iframe
-              src="https://www.eventbrite.ca/checkout-external?eid=1982595902715" // Eventbrite's direct embedded checkout URL format
-              frameBorder="0"
-              height="100%"
-              width="100%"
-              vspace="0"
-              hspace="0"
-              marginHeight="5"
-              marginWidth="5"
-              scrolling="auto"
-              allowTransparency="true"
-              className="absolute inset-0 grayscale contrast-125 opacity-90 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
-            ></iframe>
-
-            <div className="absolute bottom-4 left-4 right-4 pointer-events-none">
-              <div className="text-[8px] font-mono text-white/20 uppercase tracking-widest text-center">
-                POWERED BY EVENTBRITE // SECURE CONNECTION
+          <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[8px] font-mono text-white/40 uppercase tracking-widest">Client Identifier</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full bg-black/50 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-signal-green transition-colors disabled:opacity-50"
+                  disabled={status !== 'IDLE'}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[8px] font-mono text-white/40 uppercase tracking-widest">Return Signal (Email)</label>
+                <input
+                  type="email"
+                  required
+                  className="w-full bg-black/50 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-signal-green transition-colors disabled:opacity-50"
+                  disabled={status !== 'IDLE'}
+                />
               </div>
             </div>
-          </div>
+
+            <div className="space-y-1">
+              <label className="text-[8px] font-mono text-white/40 uppercase tracking-widest">Transmission Payload</label>
+              <textarea
+                required
+                rows={4}
+                className="w-full bg-black/50 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-signal-green transition-colors resize-none disabled:opacity-50"
+                disabled={status !== 'IDLE'}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={status !== 'IDLE'}
+              className={`w-full py-4 text-xs font-bold tracking-[0.2em] transition-all flex items-center justify-center gap-2 ${status === 'IDLE'
+                  ? 'bg-signal-green text-onyx hover:bg-white'
+                  : status === 'SENDING'
+                    ? 'bg-white/10 text-white cursor-wait'
+                    : 'bg-onyx border border-signal-green text-signal-green'
+                }`}
+            >
+              {status === 'IDLE' && <><MessageSquare size={14} /> INITIALIZE UPLOAD</>}
+              {status === 'SENDING' && <span className="animate-pulse">ENCRYPTING INQUIRY...</span>}
+              {status === 'SUCCESS' && 'SIGNAL TRANSMITTED'}
+            </button>
+          </form>
         </div>
       </div>
     </div>
