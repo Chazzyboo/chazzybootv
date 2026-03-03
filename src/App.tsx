@@ -63,6 +63,7 @@ const CustomCursor = () => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isPointer, setIsPointer] = useState(false);
   const [trail, setTrail] = useState<{ x: number, y: number, id: number }[]>([]);
+  const [isOverIframe, setIsOverIframe] = useState(false);
 
   useEffect(() => {
     let timeoutId: number;
@@ -70,23 +71,39 @@ const CustomCursor = () => {
       setPosition({ x: e.clientX, y: e.clientY });
 
       const target = e.target as HTMLElement;
-      setIsPointer(window.getComputedStyle(target).cursor === 'pointer');
+      const overIframe = target.tagName === 'IFRAME';
+      setIsOverIframe(overIframe);
+      setIsPointer(!overIframe && window.getComputedStyle(target).cursor === 'pointer');
 
-      setTrail(prev => [
-        ...prev.slice(-10),
-        { x: e.clientX, y: e.clientY, id: Date.now() }
-      ]);
+      if (!overIframe) {
+        setTrail(prev => [
+          ...prev.slice(-10),
+          { x: e.clientX, y: e.clientY, id: Date.now() }
+        ]);
+        clearTimeout(timeoutId);
+        timeoutId = window.setTimeout(() => setTrail([]), 100);
+      } else {
+        setTrail([]);
+      }
+    };
 
-      clearTimeout(timeoutId);
-      timeoutId = window.setTimeout(() => setTrail([]), 100);
+    // When mouse re-enters the page from an iframe, clear the "over iframe" state
+    const handleMouseOver = (e: MouseEvent) => {
+      if ((e.target as HTMLElement).tagName !== 'IFRAME') {
+        setIsOverIframe(false);
+      }
     };
 
     window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseover', handleMouseOver);
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseover', handleMouseOver);
       clearTimeout(timeoutId);
     };
   }, []);
+
+  if (isOverIframe) return null;
 
   return (
     <>
