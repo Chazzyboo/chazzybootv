@@ -992,10 +992,19 @@ const ChannelBooking = () => {
     setStatus('SENDING');
 
     try {
-      const serviceName = services.find(s => s.id === selectedService)?.label || selectedService;
-      const subject = encodeURIComponent(`Booking Inquiry: ${serviceName} - ${formData.name}`);
-      const body = encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\nService: ${serviceName}\n\nProject Details:\n${formData.details}`);
-      window.location.href = `mailto:chazzyboo.inquiries@gmail.com?subject=${subject}&body=${body}`;
+      const templateParams = {
+        name: formData.name,
+        email: formData.email,
+        service: services.find(s => s.id === selectedService)?.label || selectedService,
+        project_details: formData.details
+      };
+
+      await emailjs.send(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        templateParams,
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+      );
 
       setStatus('SUCCESS');
       setFormData({ name: '', email: '', details: '' }); // Clear form
@@ -1003,7 +1012,8 @@ const ChannelBooking = () => {
     } catch (error: any) {
       console.error('FAILED...', error);
       setStatus('IDLE');
-      alert(`Error submitting form.`);
+      const errorMsg = error?.text || error?.message || JSON.stringify(error) || "Unknown error";
+      alert(`EmailJS Error:\n\n${errorMsg}\n\nPlease check your Service ID, Template ID, and Public Key in your EmailJS dashboard.`);
     }
   };
 
