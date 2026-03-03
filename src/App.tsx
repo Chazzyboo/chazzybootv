@@ -438,58 +438,60 @@ const ChannelSound = () => {
   const [isPlaying, setIsPlaying] = useState(false);
 
   return (
-    <div className="h-full flex flex-col items-center justify-center p-4 md:p-20 overflow-y-auto">
-      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center py-16 md:py-0">
-        {/* Album Art */}
-        <div className="relative aspect-square bg-white/5 border border-white/10 overflow-hidden group max-w-[280px] md:max-w-sm mx-auto w-full">
-          <img
-            src={PROFILE_PHOTO}
-            alt="Chazzy Boo Profile"
-            className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity"
-            referrerPolicy="no-referrer"
-          />
-          {/* Visual play toggle — controls equalizer animation only */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setIsPlaying(p => !p)}
-              className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-signal-green text-onyx flex items-center justify-center shadow-2xl"
-            >
-              {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} className="ml-1" fill="currentColor" />}
-            </motion.button>
-          </div>
-          {/* Equalizer Overlay */}
-          <div className="absolute bottom-0 left-0 right-0 h-16 md:h-24 flex items-end gap-0.5 md:gap-1 px-2 md:px-4 pb-2 md:pb-4 overflow-hidden pointer-events-none">
-            {Array.from({ length: 30 }).map((_, i) => (
-              <motion.div
-                key={i}
-                animate={{ height: isPlaying ? [5, Math.random() * 60 + 5, 5] : 2 }}
-                transition={{ repeat: Infinity, duration: 0.5 + Math.random() * 0.5 }}
-                className="flex-1 bg-signal-green/40"
-              />
-            ))}
-          </div>
+    <div className="h-full flex flex-col p-4 md:p-16 overflow-y-auto pt-20 md:pt-16 pb-32 md:pb-16">
+      <div className="w-full max-w-5xl mx-auto space-y-8">
+        {/* Header */}
+        <div>
+          <div className="text-signal-green text-[10px] md:text-xs tracking-[0.3em] mb-2 uppercase">Now Broadcasting</div>
+          <h2 className="text-3xl md:text-5xl font-bold tracking-tighter italic">FREQUENCY 01</h2>
         </div>
 
-        <div className="space-y-6 md:space-y-8">
-          <div>
-            <div className="text-signal-green text-[10px] md:text-xs tracking-[0.3em] mb-2 uppercase">Now Broadcasting</div>
-            <h2 className="text-3xl md:text-5xl font-bold tracking-tighter mb-4 italic">FREQUENCY 01</h2>
-            <p className="text-white/60 text-sm md:text-base leading-relaxed max-w-md">
-              Stream Chazzy Boo's full discography. Hit play inside the Spotify player below.
-            </p>
+        {/* Main Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
+          {/* Album Art — decorative left panel */}
+          <div className="relative aspect-square bg-white/5 border border-white/10 overflow-hidden group max-w-[260px] mx-auto lg:mx-0 w-full">
+            <img
+              src={PROFILE_PHOTO}
+              alt="Chazzy Boo"
+              className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity"
+              referrerPolicy="no-referrer"
+            />
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="w-14 h-14 rounded-full bg-signal-green/20 border border-signal-green flex items-center justify-center">
+                <Radio size={20} className="text-signal-green animate-pulse" />
+              </div>
+            </div>
+            {/* Equalizer */}
+            <div className="absolute bottom-0 left-0 right-0 h-16 flex items-end gap-0.5 px-2 pb-2 overflow-hidden pointer-events-none">
+              {Array.from({ length: 24 }).map((_, i) => (
+                <motion.div
+                  key={i}
+                  animate={{ height: isPlaying ? [3, Math.random() * 50 + 3, 3] : 2 }}
+                  transition={{ repeat: Infinity, duration: 0.4 + Math.random() * 0.6 }}
+                  className="flex-1 bg-signal-green/50"
+                />
+              ))}
+            </div>
+            <div className="absolute top-3 left-3 text-[8px] font-mono text-signal-green tracking-widest">CHAZZYBOOTV</div>
+            <div className="absolute top-3 right-3 text-[8px] font-mono text-white/30">SOUND_01</div>
           </div>
 
-          {/* Spotify Embed — user interacts directly with this player */}
-          <div className="w-full rounded-xl overflow-hidden shadow-2xl border border-white/10" style={{ height: '352px' }}>
+          {/* Spotify — main event, full height embed */}
+          <div className="lg:col-span-2">
+            <div className="text-[10px] text-white/40 font-mono tracking-widest uppercase mb-3 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-signal-green animate-pulse inline-block" />
+              SPOTIFY DIRECT FEED — CHAZZY BOO CATALOGUE
+            </div>
             <iframe
-              title="Chazzy Boo on Spotify"
+              title="Chazzy Boo — Spotify"
               src="https://open.spotify.com/embed/artist/0bFrhCc82qmydNx8NCRY9e?utm_source=generator"
               width="100%"
-              height="352"
+              height="500"
+              style={{ borderRadius: '12px', display: 'block' }}
               frameBorder="0"
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              onLoad={() => setIsPlaying(true)}
             ></iframe>
           </div>
         </div>
