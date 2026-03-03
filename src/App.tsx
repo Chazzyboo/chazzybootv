@@ -186,7 +186,7 @@ const CRTOverlay = () => (
   <div className="crt-overlay crt-flicker pointer-events-none" />
 );
 
-const OnAirSign = ({ active }: { active: boolean }) => (
+const OnAirSign = ({ active, onContactClick }: { active: boolean, onContactClick?: () => void }) => (
   <div className="fixed top-2 right-2 md:top-6 md:right-6 z-50 flex flex-col items-end gap-1 md:gap-4">
     <div className="flex items-center gap-2">
       <motion.div
@@ -217,13 +217,13 @@ const OnAirSign = ({ active }: { active: boolean }) => (
           <Instagram size={10} className="md:w-3.5 md:h-3.5" />
           @CHAZZY.BOO
         </a>
-        <a
-          href="mailto:chazzyboo.inquiries@gmail.com"
-          className="flex items-center gap-1.5 px-1.5 py-1 md:px-3 md:py-2 bg-white/5 border border-white/10 hover:bg-signal-green hover:text-onyx transition-all text-[8px] md:text-[10px] font-bold tracking-widest"
+        <button
+          onClick={onContactClick}
+          className="flex items-center gap-1.5 px-1.5 py-1 md:px-3 md:py-2 bg-white/5 border border-white/10 hover:bg-signal-green hover:text-onyx transition-all text-[8px] md:text-[10px] font-bold tracking-widest cursor-pointer"
         >
           <Mail size={10} className="md:w-3.5 md:h-3.5" />
           CONTACT HUB
-        </a>
+        </button>
       </motion.div>
     )}
   </div>
@@ -1008,10 +1008,21 @@ const ChannelBooking = () => {
 
       setStatus('SUCCESS');
       setFormData({ name: '', email: '', details: '' }); // Clear form
-      setTimeout(() => setStatus('IDLE'), 3000);
+      setTimeout(() => setStatus('IDLE'), 5000); // 5 seconds for confirmation visibility
     } catch (error: any) {
       console.error('FAILED...', error);
       setStatus('IDLE');
+
+      const missingKeys = [];
+      if (!import.meta.env.VITE_EMAILJS_SERVICE_ID) missingKeys.push('VITE_EMAILJS_SERVICE_ID');
+      if (!import.meta.env.VITE_EMAILJS_TEMPLATE_ID) missingKeys.push('VITE_EMAILJS_TEMPLATE_ID');
+      if (!import.meta.env.VITE_EMAILJS_PUBLIC_KEY) missingKeys.push('VITE_EMAILJS_PUBLIC_KEY');
+
+      if (missingKeys.length > 0) {
+        alert(`Configuration Error: The following environment variables are missing in your deployment dashboard:\n\n${missingKeys.join('\n')}\n\nPlease add them to ensure the form works correctly.`);
+        return;
+      }
+
       const errorMsg = error?.text || error?.message || JSON.stringify(error) || "Unknown error";
       alert(`EmailJS Error:\n\n${errorMsg}\n\nPlease check your Service ID, Template ID, and Public Key in your EmailJS dashboard.`);
     }
@@ -1332,7 +1343,7 @@ export default function App() {
       </AnimatePresence>
 
       <CRTOverlay />
-      <OnAirSign active={isStarted && !isIntro} />
+      <OnAirSign active={isStarted && !isIntro} onContactClick={() => handleChannelChange('BOOKING')} />
       <CornerBug />
       <LiveTicker />
 
