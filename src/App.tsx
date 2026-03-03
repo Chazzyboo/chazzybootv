@@ -485,7 +485,7 @@ const ChannelSound = () => {
           <div className="w-full rounded-xl overflow-hidden shadow-2xl border border-white/10" style={{ height: '352px' }}>
             <iframe
               title="Chazzy Boo on Spotify"
-              src="https://open.spotify.com/embed/artist/0bFrhCc82qmydNx8NCRY9e?utm_source=generator&theme=0"
+              src="https://open.spotify.com/embed/artist/0bFrhCc82qmydNx8NCRY9e?utm_source=generator"
               width="100%"
               height="352"
               frameBorder="0"
@@ -1475,7 +1475,7 @@ export default function App() {
               >
                 <iframe
                   title="Spotify Background Player"
-                  src="https://open.spotify.com/embed/artist/0bFrhCc82qmydNx8NCRY9e?utm_source=generator&theme=0&autoplay=1"
+                  src="https://open.spotify.com/embed/artist/0bFrhCc82qmydNx8NCRY9e?utm_source=generator&autoplay=1"
                   width="100%"
                   height="152"
                   frameBorder="0"
