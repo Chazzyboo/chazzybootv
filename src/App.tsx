@@ -34,7 +34,9 @@ if (import.meta.env.VITE_PUSHER_KEY && import.meta.env.VITE_PUSHER_CLUSTER) {
 }
 
 // --- Constants ---
-const PROFILE_PHOTO = "/favicon.jpg";
+const PROFILE_PHOTO = "https://picsum.photos/seed/chazzyboo_profile/800/800";
+const YOUTUBE_API_KEY = "AIzaSyBlj5wB_10mMF5Gve_w203SSwv-MxnZyf0";
+const YOUTUBE_CHANNEL_ID = "UC7lR4s4Nco2WKJGfcP7kOmg";
 
 // --- Types ---
 type Channel = 'LATEST' | 'SOUND' | 'VISION' | 'THREADS' | 'BOXOFFICE' | 'INTEL' | 'CHAT' | 'BOOKING';
@@ -715,100 +717,90 @@ const BoxOffice = () => {
 const ChannelLatest = ({ feed }: { feed: FeedItem[] }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isManual, setIsManual] = useState(false);
-  const displayFeed = feed.slice(0, 12);
-  const latest = displayFeed[currentIndex];
+  const youtubeFeed = feed.filter(item => item.type === 'YOUTUBE').slice(0, 12);
+  const latest = youtubeFeed[currentIndex];
 
   useEffect(() => {
-    if (isManual || displayFeed.length <= 1) return;
+    if (isManual || youtubeFeed.length <= 1) return;
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % displayFeed.length);
-    }, 5000);
+      setCurrentIndex((prev) => (prev + 1) % youtubeFeed.length);
+    }, 8000); // 8 seconds for a featured slot cycle
     return () => clearInterval(interval);
-  }, [isManual, displayFeed.length]);
+  }, [isManual, youtubeFeed.length]);
 
-  if (!latest) return <div className="h-full flex items-center justify-center text-white/20">NO SIGNAL DETECTED</div>;
+  if (youtubeFeed.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center text-white/20 uppercase tracking-[0.3em] text-xs">
+        Searching for frequency... [NO SIGNAL]
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col items-center justify-center p-4 md:p-20 overflow-y-auto w-full">
-      <div className="w-full max-w-5xl pt-24 md:pt-0 pb-32 md:pb-8">
+      <div className="w-full max-w-6xl pt-24 md:pt-0 pb-32 md:pb-8">
         <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
           <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-broadcast-red animate-pulse" />
           <div className="text-broadcast-red text-[10px] md:text-xs tracking-[0.4em] md:tracking-[0.5em] font-bold uppercase">Breaking Transmission</div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 items-start">
-          <div className="lg:col-span-2 relative aspect-[16/9] bg-white/5 border border-white/10 overflow-hidden group">
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={latest.id}
-                initial={{ opacity: 0, scale: 1.1 }}
-                animate={{ opacity: 0.8, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.8 }}
-                src={latest.thumbnail}
-                alt={latest.title}
-                className="w-full h-full object-cover group-hover:opacity-100"
-                referrerPolicy="no-referrer"
-              />
-            </AnimatePresence>
-            <div className="absolute inset-0 bg-gradient-to-t from-onyx via-transparent to-transparent opacity-60" />
-            <div className="absolute top-3 right-3 md:top-4 md:right-4 bg-black/80 px-2 py-0.5 md:px-3 md:py-1 border border-white/20 text-[8px] md:text-[10px] font-bold tracking-widest uppercase">
-              {latest.type} // {new Date(latest.publishedAt).toLocaleDateString()}
-            </div>
-            <a
-              href={latest.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-onyx/40 backdrop-blur-sm"
-            >
-              <div className="flex items-center gap-2 md:gap-3 px-6 py-3 md:px-8 md:py-4 border-2 border-signal-green text-signal-green font-bold tracking-[0.15em] md:tracking-[0.2em] text-xs md:text-base">
-                <Play size={18} fill="currentColor" />
-                TUNE IN NOW
-              </div>
-            </a>
-          </div>
-
-          <div className="space-y-6 md:space-y-8 h-full flex flex-col">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 md:gap-12 items-start">
+          {/* Featured Slot */}
+          <div className="lg:col-span-3 relative aspect-video bg-white/5 border border-white/10 overflow-hidden group">
             <AnimatePresence mode="wait">
               <motion.div
                 key={latest.id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1 }}
+                className="w-full h-full"
               >
-                <h2 className="text-2xl md:text-4xl font-bold tracking-tighter italic mb-4 leading-tight">{latest.title}</h2>
-                <p className="text-white/40 text-xs md:text-sm leading-relaxed">
-                  Detected a new frequency from {latest.type}. Signal strength: OPTIMAL.
-                  Broadcast initiated at {new Date(latest.publishedAt).toLocaleTimeString()}.
-                </p>
+                <iframe
+                  src={`https://www.youtube.com/embed/${latest.id}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&loop=1&playlist=${latest.id}`}
+                  className="w-full h-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
               </motion.div>
             </AnimatePresence>
+            <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-40" />
 
-            <div className="space-y-3 md:space-y-4 pt-4 md:pt-6 border-t border-white/10 flex-1 flex flex-col min-h-0">
-              <div className="text-[9px] md:text-[10px] text-signal-green tracking-widest uppercase flex justify-between items-center shrink-0">
-                <span>Recent Signals</span>
-                {!isManual && <span className="text-[8px] text-white/20 animate-pulse">AUTO_CYCLE_ACTIVE</span>}
+            <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6">
+              <div className="text-[8px] md:text-[10px] text-signal-green font-bold tracking-[0.3em] uppercase mb-1">
+                Signal Live // Sector 01
               </div>
-              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 md:space-y-4 max-h-[350px]">
-                {displayFeed.map((item, idx) => (
-                  <button
-                    key={item.id + idx.toString()}
-                    onClick={() => {
-                      setCurrentIndex(idx);
-                      setIsManual(true);
-                    }}
-                    className={`w-full flex items-center gap-3 md:gap-4 group cursor-pointer text-left transition-all ${currentIndex === idx ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
-                  >
-                    <div className={`w-12 md:w-16 aspect-video shrink-0 bg-white/10 overflow-hidden border ${currentIndex === idx ? 'border-signal-green' : 'border-white/10'}`}>
-                      <img src={item.thumbnail} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[8px] md:text-[9px] uppercase tracking-widest">{item.type}</div>
-                      <div className={`text-[10px] md:text-xs font-bold truncate ${currentIndex === idx ? 'text-signal-green' : 'group-hover:text-signal-green'} transition-colors`}>{item.title}</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
+              <h2 className="text-xl md:text-3xl font-bold tracking-tighter truncate text-white drop-shadow-lg">
+                {latest.title}
+              </h2>
+            </div>
+          </div>
+
+          {/* Sidebar Scroller */}
+          <div className="space-y-4 h-full flex flex-col">
+            <div className="text-[9px] md:text-[10px] text-signal-green tracking-widest uppercase flex justify-between items-center shrink-0">
+              <span>Recent Signals</span>
+              {!isManual && <span className="text-[8px] text-white/20 animate-pulse">AUTO_CYCLE</span>}
+            </div>
+
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 md:space-y-4 max-h-[400px]">
+              {youtubeFeed.map((item, idx) => (
+                <button
+                  key={item.id + idx}
+                  onClick={() => {
+                    setCurrentIndex(idx);
+                    setIsManual(true);
+                  }}
+                  className={`w-full flex items-center gap-3 group cursor-pointer text-left transition-all ${currentIndex === idx ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
+                >
+                  <div className={`w-16 md:w-20 aspect-video shrink-0 bg-white/10 overflow-hidden border ${currentIndex === idx ? 'border-signal-green shadow-[0_0_10px_rgba(33,255,0,0.3)]' : 'border-white/10'}`}>
+                    <img src={item.thumbnail} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[9px] md:text-xs font-bold truncate group-hover:text-signal-green transition-colors">{item.title}</div>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -999,12 +991,26 @@ const ChannelBooking = () => {
         project_details: formData.details
       };
 
+      // 1. Send confirmation to the customer
       await emailjs.send(
         import.meta.env.VITE_EMAILJS_SERVICE_ID,
         import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
         templateParams,
         import.meta.env.VITE_EMAILJS_PUBLIC_KEY
       );
+
+      // 2. Send notification to the owner (hijacking existing template to force delivery to owner)
+      await emailjs.send(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID, // Using the same template
+        {
+          ...templateParams,
+          email: 'chazzyboo.inquiries@gmail.com', // This forces it to YOUR inbox
+          from_name: 'CBTV Website Alert',
+          message: `NOTIFICATION: New booking from ${formData.name}. Details: ${formData.details}`
+        },
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+      ).catch(err => console.warn('Owner notification failed.', err));
 
       setStatus('SUCCESS');
       setFormData({ name: '', email: '', details: '' }); // Clear form
@@ -1257,11 +1263,38 @@ export default function App() {
   useEffect(() => {
     const fetchFeed = async () => {
       try {
+        // First try the backend API
         const res = await fetch('/api/live-feed');
-        const data = await res.json();
-        setFeed(data);
+        if (res.ok) {
+          const data = await res.json();
+          setFeed(data);
+          return;
+        }
       } catch (e) {
-        console.error("Failed to fetch live feed", e);
+        console.warn("Backend feed fetch failed, attempting direct YouTube fetch", e);
+      }
+
+      // Direct YouTube Fetch Fallback
+      if (YOUTUBE_API_KEY && YOUTUBE_CHANNEL_ID) {
+        try {
+          const ytRes = await fetch(
+            `https://www.googleapis.com/youtube/v3/search?key=${YOUTUBE_API_KEY}&channelId=${YOUTUBE_CHANNEL_ID}&part=snippet,id&order=date&maxResults=12&type=video`
+          );
+          const ytData = await ytRes.json();
+          if (ytData.items) {
+            const ytItems = ytData.items.map((item: any) => ({
+              id: item.id.videoId,
+              type: 'YOUTUBE',
+              title: item.snippet.title,
+              thumbnail: item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.default?.url || "",
+              publishedAt: item.snippet.publishedAt,
+              url: `https://www.youtube.com/watch?v=${item.id.videoId}`
+            }));
+            setFeed(ytItems);
+          }
+        } catch (e) {
+          console.error("Direct YouTube fetch error", e);
+        }
       }
     };
 
