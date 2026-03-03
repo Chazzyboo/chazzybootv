@@ -479,13 +479,19 @@ const ChannelSound = () => {
 
           {/* Spotify — main event, full height embed */}
           <div className="lg:col-span-2">
-            <div className="text-[10px] text-white/40 font-mono tracking-widest uppercase mb-3 flex items-center gap-2">
+            <a
+              href="https://open.spotify.com/artist/0bFrhCc82qmydNx8NCRY9e"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] text-white/40 font-mono tracking-widest uppercase mb-3 flex items-center gap-2 hover:text-signal-green transition-colors cursor-pointer group"
+            >
               <span className="w-1.5 h-1.5 rounded-full bg-signal-green animate-pulse inline-block" />
               SPOTIFY DIRECT FEED — CHAZZY BOO CATALOGUE
-            </div>
+              <span className="text-white/20 group-hover:text-signal-green transition-colors">↗</span>
+            </a>
             <iframe
               title="Chazzy Boo — Spotify"
-              src="https://open.spotify.com/embed/artist/0bFrhCc82qmydNx8NCRY9e?utm_source=generator"
+              src="https://open.spotify.com/embed/artist/0bFrhCc82qmydNx8NCRY9e?utm_source=generator&autoplay=1"
               width="100%"
               height="500"
               style={{ borderRadius: '12px', display: 'block' }}
