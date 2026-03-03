@@ -35,8 +35,8 @@ if (import.meta.env.VITE_PUSHER_KEY && import.meta.env.VITE_PUSHER_CLUSTER) {
 
 // --- Constants ---
 const PROFILE_PHOTO = "https://picsum.photos/seed/chazzyboo_profile/800/800";
-const YOUTUBE_API_KEY = "AIzaSyBlj5wB_10mMF5Gve_w203SSwv-MxnZyf0";
-const YOUTUBE_CHANNEL_ID = "UC7lR4s4Nco2WKJGfcP7kOmg";
+const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY || "AIzaSyBlj5wB_10mMF5Gve_w203SSwv-MxnZyf0";
+const YOUTUBE_CHANNEL_ID = import.meta.env.VITE_YOUTUBE_CHANNEL_ID || "UC7lR4s4Nco2WKJGfcP7kOmg";
 
 // --- Types ---
 type Channel = 'LATEST' | 'SOUND' | 'VISION' | 'THREADS' | 'BOXOFFICE' | 'INTEL' | 'CHAT' | 'BOOKING';
