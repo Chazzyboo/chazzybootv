@@ -436,18 +436,11 @@ const RemoteControl = ({ currentChannel, setChannel }: { currentChannel: Channel
 
 const ChannelSound = () => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const iframeRef = React.useRef<HTMLIFrameElement>(null);
-
-  const togglePlay = () => {
-    if (iframeRef.current && iframeRef.current.contentWindow) {
-      iframeRef.current.contentWindow.postMessage({ command: 'toggle' }, '*');
-    }
-    setIsPlaying(!isPlaying);
-  };
 
   return (
     <div className="h-full flex flex-col items-center justify-center p-4 md:p-20 overflow-y-auto">
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center py-16 md:py-0">
+        {/* Album Art */}
         <div className="relative aspect-square bg-white/5 border border-white/10 overflow-hidden group max-w-[280px] md:max-w-sm mx-auto w-full">
           <img
             src={PROFILE_PHOTO}
@@ -455,17 +448,17 @@ const ChannelSound = () => {
             className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity"
             referrerPolicy="no-referrer"
           />
+          {/* Visual play toggle — controls equalizer animation only */}
           <div className="absolute inset-0 flex items-center justify-center">
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              onClick={togglePlay}
+              onClick={() => setIsPlaying(p => !p)}
               className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-signal-green text-onyx flex items-center justify-center shadow-2xl"
             >
               {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} className="ml-1" fill="currentColor" />}
             </motion.button>
           </div>
-
           {/* Equalizer Overlay */}
           <div className="absolute bottom-0 left-0 right-0 h-16 md:h-24 flex items-end gap-0.5 md:gap-1 px-2 md:px-4 pb-2 md:pb-4 overflow-hidden pointer-events-none">
             {Array.from({ length: 30 }).map((_, i) => (
@@ -484,19 +477,20 @@ const ChannelSound = () => {
             <div className="text-signal-green text-[10px] md:text-xs tracking-[0.3em] mb-2 uppercase">Now Broadcasting</div>
             <h2 className="text-3xl md:text-5xl font-bold tracking-tighter mb-4 italic">FREQUENCY 01</h2>
             <p className="text-white/60 text-sm md:text-base leading-relaxed max-w-md">
-              A sonic exploration of midnight frequencies. Blending industrial textures with deep atmospheric resonance.
+              Stream Chazzy Boo's full discography. Hit play inside the Spotify player below.
             </p>
           </div>
 
-          <div className="w-full h-[352px] rounded-xl overflow-hidden shadow-2xl">
+          {/* Spotify Embed — user interacts directly with this player */}
+          <div className="w-full rounded-xl overflow-hidden shadow-2xl border border-white/10" style={{ height: '352px' }}>
             <iframe
-              ref={iframeRef}
+              title="Chazzy Boo on Spotify"
               src="https://open.spotify.com/embed/artist/0bFrhCc82qmydNx8NCRY9e?utm_source=generator&theme=0"
               width="100%"
-              height="100%"
+              height="352"
               frameBorder="0"
-              allowFullScreen
-              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
             ></iframe>
           </div>
         </div>
