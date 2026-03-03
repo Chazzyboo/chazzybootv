@@ -497,7 +497,6 @@ const ChannelSound = () => {
               frameBorder="0"
               allowFullScreen
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"
-              className="bg-black mix-blend-screen"
             ></iframe>
           </div>
         </div>
@@ -1457,7 +1456,6 @@ export default function App() {
                   allowFullScreen
                   allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                   loading="lazy"
-                  className="bg-black"
                 ></iframe>
               </motion.div>
             )}

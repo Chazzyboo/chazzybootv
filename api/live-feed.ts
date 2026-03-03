@@ -1,8 +1,8 @@
 export default async function handler(req, res) {
     try {
-        // Support both prefixed and unprefixed key names
-        const youtubeKey = process.env.YOUTUBE_API_KEY || process.env.VITE_YOUTUBE_API_KEY;
-        const youtubeChannelId = process.env.YOUTUBE_CHANNEL_ID || process.env.VITE_YOUTUBE_CHANNEL_ID || "UC7lR4s4Nco2WKJGfcP7kOmg";
+        // Trim env vars to remove any trailing newlines from Windows CLI tools
+        const youtubeKey = (process.env.YOUTUBE_API_KEY || process.env.VITE_YOUTUBE_API_KEY || "AIzaSyBlj5wB_10mMF5Gve_w203SSwv-MxnZyf0").trim();
+        const youtubeChannelId = (process.env.YOUTUBE_CHANNEL_ID || process.env.VITE_YOUTUBE_CHANNEL_ID || "UC7lR4s4Nco2WKJGfcP7kOmg").trim();
         const instagramToken = process.env.INSTAGRAM_ACCESS_TOKEN;
 
         let feedItems = [];
