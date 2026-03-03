@@ -490,7 +490,6 @@ const ChannelSound = () => {
               height="352"
               frameBorder="0"
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              loading="lazy"
             ></iframe>
           </div>
         </div>
@@ -1476,13 +1475,11 @@ export default function App() {
               >
                 <iframe
                   title="Spotify Background Player"
-                  src="https://open.spotify.com/embed/artist/0bFrhCc82qmydNx8NCRY9e?utm_source=generator&theme=0"
+                  src="https://open.spotify.com/embed/artist/0bFrhCc82qmydNx8NCRY9e?utm_source=generator&theme=0&autoplay=1"
                   width="100%"
                   height="152"
                   frameBorder="0"
-                  allowFullScreen
                   allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                  loading="lazy"
                 ></iframe>
               </motion.div>
             )}
