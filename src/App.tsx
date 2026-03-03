@@ -710,6 +710,7 @@ const BoxOffice = () => {
 const ChannelLatest = ({ feed }: { feed: FeedItem[] }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isManual, setIsManual] = useState(false);
+  const [playingId, setPlayingId] = useState<string | null>(null);
   const youtubeFeed = feed.filter(item => item.type === 'YOUTUBE').slice(0, 12);
   const latest = youtubeFeed[currentIndex];
 
@@ -739,27 +740,53 @@ const ChannelLatest = ({ feed }: { feed: FeedItem[] }) => {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 md:gap-12 items-start">
           {/* Featured Slot */}
-          <div className="lg:col-span-3 relative aspect-video bg-white/5 border border-white/10 overflow-hidden group">
+          <div className="lg:col-span-3 relative aspect-video bg-black border border-white/10 overflow-hidden group">
             <AnimatePresence mode="wait">
               <motion.div
                 key={latest.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 1 }}
+                transition={{ duration: 0.6 }}
                 className="w-full h-full"
               >
-                <iframe
-                  src={`https://www.youtube.com/embed/${latest.id}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&loop=1&playlist=${latest.id}`}
-                  className="w-full h-full border-0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
+                {playingId === latest.id ? (
+                  // Actual YouTube embed — shown only when user clicks play
+                  <iframe
+                    src={`https://www.youtube.com/embed/${latest.id}?autoplay=1&controls=1&modestbranding=1&rel=0`}
+                    className="w-full h-full border-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  // Thumbnail + play button — always loads, no embedding restrictions
+                  <div
+                    className="relative w-full h-full cursor-pointer"
+                    onClick={() => setPlayingId(latest.id)}
+                  >
+                    <img
+                      src={`https://img.youtube.com/vi/${latest.id}/maxresdefault.jpg`}
+                      onError={(e) => { (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${latest.id}/hqdefault.jpg`; }}
+                      alt={latest.title}
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Dark overlay */}
+                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors" />
+                    {/* Play button */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <motion.div
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-broadcast-red flex items-center justify-center shadow-2xl shadow-broadcast-red/40"
+                      >
+                        <Play size={28} className="ml-1 text-white" fill="white" />
+                      </motion.div>
+                    </div>
+                  </div>
+                )}
               </motion.div>
             </AnimatePresence>
-            <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-40" />
-
-            <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6">
+            <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 pointer-events-none">
               <div className="text-[8px] md:text-[10px] text-signal-green font-bold tracking-[0.3em] uppercase mb-1">
                 Signal Live // Sector 01
               </div>
@@ -783,11 +810,17 @@ const ChannelLatest = ({ feed }: { feed: FeedItem[] }) => {
                   onClick={() => {
                     setCurrentIndex(idx);
                     setIsManual(true);
+                    setPlayingId(null); // reset to thumbnail view when switching
                   }}
                   className={`w-full flex items-center gap-3 group cursor-pointer text-left transition-all ${currentIndex === idx ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
                 >
                   <div className={`w-16 md:w-20 aspect-video shrink-0 bg-white/10 overflow-hidden border ${currentIndex === idx ? 'border-signal-green shadow-[0_0_10px_rgba(33,255,0,0.3)]' : 'border-white/10'}`}>
-                    <img src={item.thumbnail} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <img
+                      src={item.thumbnail || `https://img.youtube.com/vi/${item.id}/hqdefault.jpg`}
+                      onError={(e) => { (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${item.id}/hqdefault.jpg`; }}
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-[9px] md:text-xs font-bold truncate group-hover:text-signal-green transition-colors">{item.title}</div>
