@@ -1,7 +1,8 @@
 export default async function handler(req, res) {
     try {
-        const youtubeKey = process.env.YOUTUBE_API_KEY;
-        const youtubeChannelId = process.env.YOUTUBE_CHANNEL_ID;
+        // Support both prefixed and unprefixed key names
+        const youtubeKey = process.env.YOUTUBE_API_KEY || process.env.VITE_YOUTUBE_API_KEY;
+        const youtubeChannelId = process.env.YOUTUBE_CHANNEL_ID || process.env.VITE_YOUTUBE_CHANNEL_ID || "UC7lR4s4Nco2WKJGfcP7kOmg";
         const instagramToken = process.env.INSTAGRAM_ACCESS_TOKEN;
 
         let feedItems = [];
@@ -55,22 +56,22 @@ export default async function handler(req, res) {
         // Sort by date descending
         feedItems.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 
-        // If no keys provided, return mock data for demo purposes
+        // If no keys provided, return real ChazzyBooTV videos as fallback
         if (feedItems.length === 0) {
             const mockVideos = [
-                { id: 'x6ZOmTS_AxE', title: 'CHAZZY BOO - BOOL\'N (OFFICIAL MUSIC VIDEO)' },
-                { id: 'dQw4w9WgXcQ', title: 'CHAZZY BOO - LATE NIGHT STUDIO SESSIONS' },
-                { id: 'x6ZOmTS_AxE', title: 'CHAZZY BOO - ONYX VIBES (LIVE SET)' },
-                { id: 'dQw4w9WgXcQ', title: 'CHAZZY BOO - SATELLITE DREAM' },
-                { id: 'x6ZOmTS_AxE', title: 'CHAZZY BOO - BEHIND THE SCENES: BOOL\'N' },
-                { id: 'dQw4w9WgXcQ', title: 'CHAZZY BOO - INDUSTRIAL TEXTURES VOL. 1' },
+                { id: 'pZK2ZwUKV7w', title: "EverySingleDay" },
+                { id: 'LsYfFNs31Kc', title: "Chazzy Boo - EverySingleDay (Official Music Video)" },
+                { id: 'EX77cZd9dGc', title: "Unreleased Interview With Chazzy Boo" },
+                { id: 'V9YVzPQC7iw', title: "DawgEatDawg" },
+                { id: 'x6ZOmTS_AxE', title: "CHAZZY BOO - BOOL'N (Official Music Video)" },
+                { id: 'pZK2ZwUKV7w', title: "EverySingleDay (Audio)" },
             ];
 
             feedItems = mockVideos.map((video, index) => ({
-                id: video.id + index,
+                id: video.id,
                 type: 'YOUTUBE',
                 title: video.title,
-                thumbnail: `https://img.youtube.com/vi/${video.id}/maxresdefault.jpg`,
+                thumbnail: `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`,
                 publishedAt: new Date(Date.now() - index * 86400000).toISOString(),
                 url: `https://www.youtube.com/watch?v=${video.id}`
             }));
