@@ -34,7 +34,7 @@ if (import.meta.env.VITE_PUSHER_KEY && import.meta.env.VITE_PUSHER_CLUSTER) {
 }
 
 // --- Constants ---
-const PROFILE_PHOTO = "https://picsum.photos/seed/chazzyboo_profile/800/800";
+const PROFILE_PHOTO = "/favicon.jpg";
 
 // --- Types ---
 type Channel = 'LATEST' | 'SOUND' | 'VISION' | 'THREADS' | 'BOXOFFICE' | 'INTEL' | 'CHAT' | 'BOOKING';
