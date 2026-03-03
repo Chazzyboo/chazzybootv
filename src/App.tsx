@@ -63,6 +63,7 @@ const CustomCursor = () => {
   const [trail, setTrail] = useState<{ x: number, y: number, id: number }[]>([]);
 
   useEffect(() => {
+    let timeoutId: number;
     const handleMouseMove = (e: MouseEvent) => {
       setPosition({ x: e.clientX, y: e.clientY });
 
@@ -73,10 +74,16 @@ const CustomCursor = () => {
         ...prev.slice(-10),
         { x: e.clientX, y: e.clientY, id: Date.now() }
       ]);
+
+      clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => setTrail([]), 100);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   return (
@@ -601,9 +608,44 @@ const ChannelThreads = () => {
   );
 };
 
+const Countdown = ({ targetDate }: { targetDate: string }) => {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    const target = new Date(targetDate).getTime();
+
+    const timer = setInterval(() => {
+      const now = new Date().getTime();
+      const difference = target - now;
+
+      if (difference > 0) {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((difference % (1000 * 60)) / 1000)
+        });
+      } else {
+        clearInterval(timer);
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [targetDate]);
+
+  return (
+    <span>
+      {String(timeLeft.days).padStart(2, '0')}:
+      {String(timeLeft.hours).padStart(2, '0')}:
+      {String(timeLeft.minutes).padStart(2, '0')}:
+      {String(timeLeft.seconds).padStart(2, '0')}
+    </span>
+  );
+};
+
 const BoxOffice = () => {
   const events = [
-    { id: 1, title: 'VIBE SERIES', date: 'MAR 19', time: '19:00', status: 'PHYSICAL EVENT', price: 'TICKETS', url: 'https://www.eventbrite.ca/e/vibe-series-tickets-1982595902715' },
+    { id: 1, title: 'VIBE SERIES', date: 'MAR 19', time: '19:00', status: 'PHYSICAL EVENT', price: 'TICKETS', url: 'https://www.eventbrite.ca/e/vibe-series-tickets-1982595902715?aff=ebdssbdestsearch' },
     { id: 2, title: 'TRANSMISSION 02', date: 'TBA', time: '--:--', status: 'LIVE BROADCAST', price: '-' },
     { id: 3, title: 'TRANSMISSION 03', date: 'TBA', time: '--:--', status: 'PRIVATE FEED', price: '-' },
   ];
@@ -617,7 +659,7 @@ const BoxOffice = () => {
         </div>
         <div className="flex flex-col md:flex-row gap-4 items-center">
           <a
-            href="https://chazzyboo.eventbrite.com"
+            href="https://www.eventbrite.ca/e/vibe-series-tickets-1982595902715?aff=ebdssbdestsearch"
             target="_blank"
             rel="noopener noreferrer"
             className="w-full md:w-auto px-6 py-3 bg-onyx border border-white/20 hover:border-signal-green hover:text-signal-green transition-all text-[10px] font-bold tracking-widest uppercase flex items-center gap-2"
@@ -627,7 +669,9 @@ const BoxOffice = () => {
           </a>
           <div className="w-full md:w-auto bg-broadcast-red/10 border border-broadcast-red p-4 md:p-6 text-center">
             <div className="text-[8px] md:text-[10px] text-broadcast-red tracking-widest mb-1 uppercase">Next Transmission</div>
-            <div className="text-2xl md:text-4xl font-bold font-mono text-broadcast-red">14:22:09:44</div>
+            <div className="text-2xl md:text-4xl font-bold font-mono text-broadcast-red">
+              <Countdown targetDate="2026-03-19T19:00:00" />
+            </div>
           </div>
         </div>
       </div>
@@ -775,12 +819,12 @@ const ChannelLatest = ({ feed }: { feed: FeedItem[] }) => {
 
 const ChannelIntel = () => {
   const signals = [
-    { platform: 'APPLE_MUSIC', url: 'https://music.apple.com/artist/chazzy-boo', desc: 'Premium sound frequency distribution.', category: 'SOUND' },
-    { platform: 'YOUTUBE_MUSIC', url: 'https://music.youtube.com/channel/chazzyboo', desc: 'Google Play / YouTube Music node.', category: 'SOUND' },
-    { platform: 'SOUNDCLOUD', url: 'https://soundcloud.com/chazzyboo', desc: 'Sound archives and experimental frequencies.', category: 'SOUND' },
-    { platform: 'INSTAGRAM', url: 'https://instagram.com/chazzyboo.jpeg', desc: 'Visual transmission and daily logs.', category: 'VISION' },
+    { platform: 'APPLE_MUSIC', url: 'https://music.apple.com/us/artist/chazzy-boo/1462602436', desc: 'Premium sound frequency distribution.', category: 'SOUND' },
+    { platform: 'YOUTUBE_MUSIC', url: 'https://music.youtube.com/channel/UCuPj0ueiklKL46TFjKWuD-Q', desc: 'Google Play / YouTube Music node.', category: 'SOUND' },
+    { platform: 'SOUNDCLOUD', url: 'https://soundcloud.com/chazzyboo780', desc: 'Sound archives and experimental frequencies.', category: 'SOUND' },
+    { platform: 'INSTAGRAM', url: 'https://www.instagram.com/chazzy.boo/', desc: 'Visual transmission and daily logs.', category: 'VISION' },
     { platform: 'YOUTUBE', url: 'https://youtube.com/@chazzybootv', desc: 'Broadcast hub for high-definition visuals.', category: 'VISION' },
-    { platform: 'EVENTBRITE', url: 'https://chazzyboo.eventbrite.com', desc: 'Primary ticketing node for physical events.', category: 'ACCESS' },
+    { platform: 'EVENTBRITE', url: 'https://www.eventbrite.ca/e/vibe-series-tickets-1982595902715?aff=ebdssbdestsearch#organizer-card', desc: 'Primary ticketing node for physical events.', category: 'ACCESS' },
     { platform: 'SPOTIFY', url: 'https://open.spotify.com/artist/0bFrhCc82qmydNx8NCRY9e', desc: 'Verified sound frequency distribution.', category: 'SOUND' },
     { platform: 'X', url: 'https://x.com/ChazzyBoo780', desc: 'Real-time broadcast updates and signal logs.', category: 'INTEL' },
   ];
@@ -948,19 +992,10 @@ const ChannelBooking = () => {
     setStatus('SENDING');
 
     try {
-      const templateParams = {
-        name: formData.name,
-        email: formData.email,
-        service: services.find(s => s.id === selectedService)?.label || selectedService,
-        project_details: formData.details
-      };
-
-      await emailjs.send(
-        import.meta.env.VITE_EMAILJS_SERVICE_ID,
-        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-        templateParams,
-        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-      );
+      const serviceName = services.find(s => s.id === selectedService)?.label || selectedService;
+      const subject = encodeURIComponent(`Booking Inquiry: ${serviceName} - ${formData.name}`);
+      const body = encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\nService: ${serviceName}\n\nProject Details:\n${formData.details}`);
+      window.location.href = `mailto:chazzyboo.inquiries@gmail.com?subject=${subject}&body=${body}`;
 
       setStatus('SUCCESS');
       setFormData({ name: '', email: '', details: '' }); // Clear form
@@ -968,8 +1003,7 @@ const ChannelBooking = () => {
     } catch (error: any) {
       console.error('FAILED...', error);
       setStatus('IDLE');
-      const errorMsg = error?.text || error?.message || JSON.stringify(error) || "Unknown error";
-      alert(`EmailJS Error:\n\n${errorMsg}\n\nPlease check your Service ID, Template ID, and Public Key.`);
+      alert(`Error submitting form.`);
     }
   };
 
