@@ -1046,9 +1046,7 @@ const ChannelBooking = () => {
         import.meta.env.VITE_EMAILJS_SERVICE_ID,
         import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
         templateParams,
-        {
-          publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
-        }
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
       );
 
       // 2. Send notification to the owner (hijacking existing template to force delivery to owner)
@@ -1061,9 +1059,7 @@ const ChannelBooking = () => {
           from_name: 'CBTV Website Alert',
           message: `NOTIFICATION: New booking from ${formData.name}. Details: ${formData.details}`
         },
-        {
-          publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
-        }
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
       ).catch(err => console.warn('Owner notification failed.', err));
 
       setStatus('SUCCESS');
