@@ -6,7 +6,8 @@ const envs = {
     YOUTUBE_CHANNEL_ID: 'UC7lR4s4Nco2WKJGfcP7kOmg',
     VITE_EMAILJS_SERVICE_ID: 'service_4b0w8bs',
     VITE_EMAILJS_TEMPLATE_ID: 'template_qnf6ggv',
-    VITE_EMAILJS_PUBLIC_KEY: 'Kx3pJR9RKIlev8C8N'
+    VITE_EMAILJS_PUBLIC_KEY: 'Kx3pJR9RKIlev8C8N',
+    VITE_EMAILJS_OWNER_TEMPLATE_ID: 'template_qnf6ggv'
 };
 
 for (const [k, v] of Object.entries(envs)) {

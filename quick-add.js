@@ -44,9 +44,11 @@ async function addEnv(name, value) {
 }
 
 (async () => {
+    await addEnv('YOUTUBE_API_KEY', 'AIzaSyBlj5wB_10mMF5Gve_w203SSwv-MxnZyf0');
+    await addEnv('YOUTUBE_CHANNEL_ID', 'UC7lR4s4Nco2WKJGfcP7kOmg');
     await addEnv('PUSHER_APP_ID', '2122024');
     await addEnv('VITE_PUSHER_KEY', '95986ea0933904024e75');
     await addEnv('PUSHER_SECRET', '572ec96a61751de169c0');
     await addEnv('VITE_PUSHER_CLUSTER', 'us2');
-    console.log('All Pusher variables configured!');
+    console.log('All variables configured!');
 })();
