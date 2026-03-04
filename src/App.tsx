@@ -1043,18 +1043,18 @@ const ChannelBooking = () => {
 
       // 1. Send confirmation to the customer
       await emailjs.send(
-        import.meta.env.VITE_EMAILJS_SERVICE_ID,
-        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        "service_4b0w8bs",
+        "template_qnf6ggv",
         templateParams,
         {
-          publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
+          publicKey: "Kx3pJR9RKIlev8C8N",
         }
       );
 
       // 2. Send notification to the owner (hijacking existing template to force delivery to owner)
       await emailjs.send(
-        import.meta.env.VITE_EMAILJS_SERVICE_ID,
-        import.meta.env.VITE_EMAILJS_TEMPLATE_ID, // Using the same template
+        "service_4b0w8bs",
+        "template_qnf6ggv", // Using the same template
         {
           ...templateParams,
           email: 'chazzyboo.inquiries@gmail.com', // This forces it to YOUR inbox
@@ -1062,7 +1062,7 @@ const ChannelBooking = () => {
           message: `NOTIFICATION: New booking from ${formData.name}. Details: ${formData.details}`
         },
         {
-          publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
+          publicKey: "Kx3pJR9RKIlev8C8N",
         }
       ).catch(err => console.warn('Owner notification failed.', err));
 
