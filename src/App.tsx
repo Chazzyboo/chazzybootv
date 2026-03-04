@@ -1057,7 +1057,8 @@ const ChannelBooking = () => {
           ...templateParams,
           email: 'chazzyboo.inquiries@gmail.com', // This forces it to YOUR inbox
           from_name: 'CBTV Website Alert',
-          message: `NOTIFICATION: New booking from ${formData.name}. Details: ${formData.details}`
+          reply_to: formData.email, // Standard EmailJS variable for hitting reply
+          message: `NOTIFICATION: New booking request!\n\nFrom: ${formData.name} (${formData.email})\nService: ${templateParams.service}\nDetails: ${formData.details}`
         },
         "Kx3pJR9RKIlev8C8N"
       ).catch(err => console.warn('Owner notification failed.', err));
