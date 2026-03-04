@@ -1315,6 +1315,13 @@ export default function App() {
   const [wpPosts, setWpPosts] = useState<WPPost[]>([]);
 
   useEffect(() => {
+    // Initialize EmailJS directly with the public key on load
+    if (import.meta.env.VITE_EMAILJS_PUBLIC_KEY) {
+      emailjs.init({
+        publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
+      });
+    }
+
     const fetchFeed = async () => {
       try {
         // First try the backend API
